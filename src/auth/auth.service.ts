@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcryptjs';
+import { UserService } from '../user/user.service';
 
 interface AuthenticatedUser {
   uuid: string;
@@ -11,10 +12,10 @@ interface AuthenticatedUser {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly userService: UserService) {}
 
-  login(username: string, password_hash: string) {
-    const user = this.usersService.findByUsername(username);
+  async login(username: string, password: string) {
+    const user = await this.userService.findByUsername(username);
 
     if (!user) {
       return null;
@@ -22,7 +23,12 @@ export class AuthService {
 
     const authenticatedUser = user as unknown as AuthenticatedUser;
 
-    if (authenticatedUser.password_hash !== password_hash) {
+    const passwordMatches = await bcrypt.compare(
+      password,
+      authenticatedUser.password_hash,
+    );
+
+    if (!passwordMatches) {
       return null;
     }
 
