@@ -12,6 +12,7 @@ async function bootstrap(): Promise<void> {
   await app.listen(port);
 
   console.log(`Backend running at http://localhost:${port}`);
+
   console.log(`Auth API: http://localhost:${port}/auth/login`);
   console.log(`Users API: http://localhost:${port}/user`);
   console.log(`Google Sheets API: http://localhost:${port}/google-sheets`);
