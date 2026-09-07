@@ -1,0 +1,221 @@
+<div class="dt-card">
+  <div class="dt-toolbar">
+    <label class="dt-search input input-bordered input-sm">
+      <svg
+        class="dt-search-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        class="grow"
+        placeholder="ค้นหา..."
+        [value]="globalFilter()"
+        (input)="onSearchInput($any($event.target).value)"
+      />
+    </label>
+
+    <div class="dt-count">
+      พบ <span class="dt-count-value">{{ table.getFilteredRowModel().rows.length }}</span> รายการ
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="dt-skeleton-wrap">
+      <div class="dt-skeleton-box">
+        @for (i of skeletonRows; track i) {
+          <div
+            class="dt-skeleton-row"
+            [class.dt-skeleton-row-divider]="i !== skeletonRows.length - 1"
+          >
+            <div class="skeleton dt-skeleton-a"></div>
+            <div class="skeleton dt-skeleton-b"></div>
+            <div class="skeleton dt-skeleton-c"></div>
+            <div class="skeleton dt-skeleton-d"></div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="dt-error alert alert-error">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="dt-error-icon stroke-current"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
+      </svg>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  } @else if (table.getRowModel().rows.length === 0) {
+    <div class="dt-empty">
+      <div class="dt-empty-icon-wrap">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="dt-empty-icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+          />
+        </svg>
+      </div>
+      <span class="dt-empty-text">{{ emptyMessage() }}</span>
+    </div>
+  } @else {
+    <div class="dt-table-scroll">
+      <table class="table">
+        <thead>
+          @for (headerGroup of table.getHeaderGroups(); track headerGroup.id) {
+            <tr class="dt-thead-row">
+              @for (header of headerGroup.headers; track header.id) {
+                <th
+                  class="dt-th group"
+                  [class.dt-th-sortable]="header.column.getCanSort()"
+                  (click)="header.column.getToggleSortingHandler()?.($event)"
+                >
+                  <div class="dt-th-inner">
+                    <ng-container
+                      *flexRender="
+                        header.column.columnDef.header;
+                        props: header.getContext();
+                        let headerText
+                      "
+                      >{{ headerText }}</ng-container
+                    >
+
+                    @if (header.column.getIsSorted() === 'asc') {
+                      <span class="dt-sort-icon">▲</span>
+                    } @else if (header.column.getIsSorted() === 'desc') {
+                      <span class="dt-sort-icon">▼</span>
+                    } @else if (header.column.getCanSort()) {
+                      <span class="dt-sort-icon-hint">↕</span>
+                    }
+                  </div>
+                </th>
+              }
+            </tr>
+          }
+        </thead>
+
+        <tbody>
+          @for (row of table.getRowModel().rows; track row.id) {
+            <tr class="dt-row">
+              @for (cell of row.getAllCells(); track cell.id) {
+                <td class="dt-td">
+                  @if ($any(cell.column.columnDef.meta)?.badge) {
+                    <ng-container
+                      *flexRender="
+                        cell.column.columnDef.cell;
+                        props: cell.getContext();
+                        let cellText
+                      "
+                    >
+                      <span class="dt-badge badge badge-sm" [ngClass]="badgeClass(cellText)">
+                        {{ cellText }}
+                      </span>
+                    </ng-container>
+                  } @else {
+                    <ng-container
+                      *flexRender="
+                        cell.column.columnDef.cell;
+                        props: cell.getContext();
+                        let cellText
+                      "
+                      >{{ cellText }}</ng-container
+                    >
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="dt-footer">
+      <label class="dt-pagesize">
+        <span class="dt-pagesize-label">แสดง</span>
+        <select
+          class="dt-pagesize-select select select-sm select-bordered"
+          [value]="pagination().pageSize"
+          (change)="onPageSizeChange($any($event.target).value)"
+        >
+          @for (size of pageSizeOptions(); track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+        <span class="dt-pagesize-label">รายการต่อหน้า</span>
+      </label>
+
+      <div class="dt-pagination join">
+        <button
+          type="button"
+          class="dt-page-btn join-item btn btn-sm btn-ghost"
+          aria-label="หน้าก่อนหน้า"
+          title="หน้าก่อนหน้า"
+          [disabled]="!table.getCanPreviousPage()"
+          (click)="table.previousPage()"
+        >
+          ‹
+        </button>
+        <div class="dt-page-numbers join">
+          @for (page of pageNumbers(); track page) {
+            @if (pagination().pageIndex + 1 === page) {
+              <input
+                class="dt-page-number dt-page-current join-item input input-sm"
+                type="number"
+                min="1"
+                [max]="table.getPageCount() || 1"
+                [value]="page"
+                aria-label="หน้าปัจจุบัน"
+                title="พิมพ์เลขหน้าแล้วกด Enter"
+                (keydown.enter)="goToPageFromInput($any($event.target).value)"
+                (blur)="goToPageFromInput($any($event.target).value)"
+              />
+            } @else {
+              <button
+                type="button"
+                class="dt-page-number join-item btn btn-sm btn-ghost"
+                [attr.aria-label]="'หน้า ' + page"
+                (click)="goToPage(page)"
+              >
+                {{ page }}
+              </button>
+            }
+          }
+        </div>
+        <span class="dt-page-total">
+          {{ pagination().pageIndex + 1 }} / {{ table.getPageCount() || 1 }}
+        </span>
+        <button
+          type="button"
+          class="dt-page-btn join-item btn btn-sm btn-ghost"
+          aria-label="หน้าถัดไป"
+          title="หน้าถัดไป"
+          [disabled]="!table.getCanNextPage()"
+          (click)="table.nextPage()"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  }
+</div>

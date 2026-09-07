@@ -1,0 +1,196 @@
+@reference "../../../../styles.css";
+
+.dt-card {
+  @apply bg-base-100 rounded-2xl shadow-sm border border-base-200/80;
+}
+
+.dt-toolbar {
+  @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 pt-5 pb-4;
+}
+
+.dt-search {
+  @apply flex items-center gap-2 w-full sm:max-w-xs rounded-lg focus-within:outline-2 focus-within:outline-primary/30;
+}
+
+.dt-search-icon {
+  @apply h-4 w-4 opacity-40;
+}
+
+.dt-count {
+  @apply text-sm text-base-content/45 whitespace-nowrap;
+}
+
+.dt-count-value {
+  @apply font-semibold text-base-content/70;
+}
+
+.dt-skeleton-wrap {
+  @apply px-5 pb-5;
+}
+
+.dt-skeleton-box {
+  @apply overflow-hidden rounded-xl border border-base-200;
+}
+
+.dt-skeleton-row {
+  @apply flex items-center gap-4 px-4 py-3.5;
+}
+
+.dt-skeleton-row-divider {
+  @apply border-b border-base-200;
+}
+
+.dt-skeleton-a {
+  @apply h-4 w-1/4 rounded;
+}
+
+.dt-skeleton-b {
+  @apply h-4 w-1/6 rounded;
+}
+
+.dt-skeleton-c {
+  @apply h-4 w-1/5 rounded;
+}
+
+.dt-skeleton-d {
+  @apply h-4 w-1/6 rounded ml-auto;
+}
+
+.dt-error {
+  @apply mx-5 mb-5 rounded-lg;
+}
+
+.dt-error-icon {
+  @apply h-6 w-6 shrink-0;
+}
+
+.dt-empty {
+  @apply flex flex-col items-center justify-center py-16 gap-3;
+}
+
+.dt-empty-icon-wrap {
+  @apply flex items-center justify-center h-14 w-14 rounded-full bg-base-200/70 text-base-content/30;
+}
+
+.dt-empty-icon {
+  @apply h-7 w-7;
+}
+
+.dt-empty-text {
+  @apply text-sm text-base-content/45;
+}
+
+.dt-table-scroll {
+  @apply overflow-x-auto;
+}
+
+.dt-thead-row {
+  @apply bg-base-200/60 border-none;
+}
+
+.dt-th {
+  @apply select-none text-[11px] font-semibold uppercase tracking-wider text-base-content/50 py-3;
+}
+
+.dt-th-sortable {
+  @apply cursor-pointer hover:text-base-content/70;
+}
+
+.dt-th-inner {
+  @apply flex items-center gap-1.5 transition-colors;
+}
+
+.dt-sort-icon {
+  @apply text-primary normal-case text-[10px];
+}
+
+.dt-sort-icon-hint {
+  @apply opacity-0 group-hover:opacity-30 normal-case text-[10px] transition-opacity;
+}
+
+.dt-row {
+  @apply border-b border-base-200/70 last:border-b-0 hover:bg-primary/[0.03] transition-colors;
+}
+
+.dt-td {
+  @apply py-3.5 text-sm;
+}
+
+.dt-badge {
+  @apply border-none font-medium px-2.5 py-2.5;
+}
+
+.dt-footer {
+  @apply flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-base-200/70;
+}
+
+.dt-pagesize {
+  @apply flex items-center gap-2 text-sm text-base-content/50;
+}
+
+.dt-pagesize-label {
+  @apply whitespace-nowrap;
+}
+
+.dt-pagesize-select {
+  @apply rounded-lg;
+}
+
+.dt-pagination {
+  @apply flex flex-1 flex-wrap items-center justify-center text-sm;
+}
+
+.dt-page-numbers {
+  @apply flex flex-wrap items-center justify-center;
+}
+
+.dt-page-number {
+  @apply min-w-9 h-9 rounded-lg px-2 font-medium transition-all;
+}
+
+.dt-page-jump {
+  @apply flex items-center gap-1 ml-2 text-xs text-base-content/50;
+}
+
+.dt-page-current {
+  @apply w-9 border-0 bg-primary text-primary-content text-center outline-none ring-0 focus:bg-primary focus:ring-2 focus:ring-primary/20;
+}
+
+.dt-page-input {
+  @apply w-14 rounded-lg text-center font-medium focus:border-primary focus:outline-primary/20;
+}
+
+.dt-page-total {
+  @apply whitespace-nowrap rounded-lg bg-base-200/70 px-2.5 py-1.5 text-xs font-medium text-base-content/60 mx-2;
+}
+
+.dt-page-btn {
+  @apply min-w-9 rounded-lg text-base font-medium disabled:opacity-30;
+}
+
+.dt-page-indicator {
+  @apply bg-base-200/70 border-none font-medium text-base-content/70 whitespace-nowrap mx-1;
+}
+
+@media (max-width: 639px) {
+  .dt-footer {
+    @apply items-stretch px-3 py-3;
+  }
+
+  .dt-pagesize {
+    @apply justify-center;
+  }
+
+  .dt-pagination {
+    @apply w-full gap-0;
+  }
+
+  .dt-page-number,
+  .dt-page-btn {
+    @apply min-w-8 h-8 text-xs;
+  }
+
+  .dt-page-total {
+    @apply mx-1 px-2 py-1 text-[11px];
+  }
+}

@@ -1,0 +1,251 @@
+<div class="dashboard-page">
+  <div class="dashboard-container">
+    <header class="dashboard-header">
+      <div class="dashboard-logo">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="dashboard-logo-svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+          />
+        </svg>
+      </div>
+      <div class="dashboard-title-group">
+        <h1 class="dashboard-title">Device Status SJP</h1>
+      </div>
+
+      <div class="dashboard-user-area">
+        @if (currentUser(); as user) {
+          <div class="dashboard-user-chip">
+            <div class="dashboard-user-avatar">
+              {{ user.username.charAt(0).toUpperCase() }}
+            </div>
+            <span class="dashboard-user-name">{{ user.username }}</span>
+          </div>
+        }
+        <button
+          type="button"
+          class="dashboard-theme-toggle btn btn-sm btn-ghost btn-circle"
+          (click)="toggleTheme()"
+          [attr.aria-label]="themeService.isDark() ? 'สลับเป็นธีมสว่าง' : 'สลับเป็นธีมมืด'"
+        >
+          @if (themeService.isDark()) {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="dashboard-theme-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+              />
+            </svg>
+          } @else {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="dashboard-theme-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
+              />
+            </svg>
+          }
+        </button>
+        <button type="button" class="dashboard-logout btn btn-sm btn-ghost" (click)="logout()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="dashboard-logout-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+            />
+          </svg>
+          ออกจากระบบ
+        </button>
+      </div>
+    </header>
+
+    <section class="dashboard-intro">
+      <div>
+        <h2 class="dashboard-heading">สรุปโปรเจกต์</h2>
+        <p class="dashboard-description">ดูสถานะล่าสุดของโปรเจกต์ในระบบ</p>
+      </div>
+    </section>
+
+    <section class="project-overview" aria-label="ภาพรวมสถานะโปรเจกต์">
+      <div class="status-breakdown">
+        <div class="breakdown-heading"><span>สถานะโปรเจกต์</span><span class="breakdown-total">ทั้งหมด {{ totalProjects() }} รายการ</span></div>
+        @for (summary of projectStatusSummary(); track summary.state) {
+          <button type="button" class="status-row" (click)="setProjectStateFilter(summary.state)">
+            <span class="status-row-name">{{ summary.state }}</span><strong>{{ summary.count }} รายการ</strong>
+          </button>
+        } @empty { <p class="empty-breakdown">กำลังรอข้อมูลโปรเจกต์</p> }
+      </div>
+    </section>
+
+    <div role="tablist" class="dashboard-tabs">
+      <a
+        role="tab"
+        class="dashboard-tab"
+        [class.dashboard-tab-active]="activeTab() === 'node'"
+        [class.dashboard-tab-inactive]="activeTab() !== 'node'"
+        (click)="setTab('node')"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="dashboard-tab-icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375"
+          />
+        </svg>
+        Node
+      </a>
+      <a
+        role="tab"
+        class="dashboard-tab"
+        [class.dashboard-tab-active]="activeTab() === 'device'"
+        [class.dashboard-tab-inactive]="activeTab() !== 'device'"
+        (click)="setTab('device')"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="dashboard-tab-icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"
+          />
+        </svg>
+        Device
+      </a>
+      <a
+        role="tab"
+        class="dashboard-tab"
+        [class.dashboard-tab-active]="activeTab() === 'project'"
+        [class.dashboard-tab-inactive]="activeTab() !== 'project'"
+        (click)="setTab('project')"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="dashboard-tab-icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21"
+          />
+        </svg>
+        Project
+      </a>
+    </div>
+
+    @if (activeTab() === 'project') {
+      <div class="project-filter-row">
+        <label class="project-filter-label" for="project-state-filter">กรองตามสถานะ</label>
+        <select
+          id="project-state-filter"
+          class="select select-sm select-bordered"
+          (change)="setProjectStateFilter($any($event.target).value)"
+        >
+          <option value="all">ทุกสถานะ</option>
+          @for (state of projectStates(); track state) {
+            <option [value]="state">{{ state }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    @if (activeTab() === 'node') {
+      <section class="project-status-grid" aria-label="สรุปสถานะ Node">
+        <article class="project-status-card">
+          <span class="project-status-label">Node ทั้งหมด</span>
+          <strong class="project-status-value">{{ totalNodes() }}</strong>
+        </article>
+        <article class="project-status-card project-status-active">
+          <span class="project-status-label">Online</span>
+          <strong class="project-status-value">{{ onlineNodes() }}</strong>
+        </article>
+        <article class="project-status-card project-status-inactive">
+          <span class="project-status-label">Offline/ไม่ระบุ</span>
+          <strong class="project-status-value">{{ offlineNodes() }}</strong>
+        </article>
+      </section>
+    }
+
+    <details class="details-panel">
+      <summary class="details-summary">
+        <span>ดูรายละเอียดข้อมูล</span>
+        <span class="details-summary-hint">{{ activeTab() === 'project' ? filteredProjects().length : activeTab() === 'node' ? nodes().length : devices().length }} รายการ</span>
+      </summary>
+      <div class="details-content">
+        @switch (activeTab()) {
+          @case ('node') {
+            <app-data-table
+              [data]="nodes()"
+              [columns]="nodeColumns"
+              [isLoading]="nodesLoading()"
+              [errorMessage]="nodesError()"
+              emptyMessage="ไม่มีข้อมูล Node"
+            />
+          }
+          @case ('device') {
+            <app-data-table
+              [data]="devices()"
+              [isLoading]="devicesLoading()"
+              [errorMessage]="devicesError()"
+              emptyMessage="ไม่มีข้อมูล Device"
+            />
+          }
+          @case ('project') {
+            <app-data-table
+              [data]="filteredProjects()"
+              [columns]="projectColumns"
+              [isLoading]="projectsLoading()"
+              [errorMessage]="projectsError()"
+              emptyMessage="ไม่มีข้อมูล Project"
+            />
+          }
+        }
+      </div>
+    </details>
+  </div>
+</div>

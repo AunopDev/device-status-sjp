@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+@plugin "daisyui" {
+  themes:
+    softwhite --default,
+    softdark --prefersdark;
+}
+
+@plugin "daisyui/theme" {
+  name: 'softwhite';
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: oklch(99% 0.002 90);
+  --color-base-200: oklch(97% 0.004 90);
+  --color-base-300: oklch(93% 0.006 90);
+  --color-base-content: oklch(30% 0.015 260);
+
+  --color-primary: oklch(58% 0.14 255);
+  --color-primary-content: oklch(98% 0.01 255);
+
+  --color-secondary: oklch(60% 0.12 300);
+  --color-secondary-content: oklch(98% 0.01 300);
+
+  --color-accent: oklch(65% 0.13 200);
+  --color-accent-content: oklch(98% 0.01 200);
+
+  --color-neutral: oklch(35% 0.02 260);
+  --color-neutral-content: oklch(97% 0.005 260);
+
+  --color-info: oklch(65% 0.13 220);
+  --color-info-content: oklch(98% 0.01 220);
+
+  --color-success: oklch(65% 0.13 155);
+  --color-success-content: oklch(98% 0.01 155);
+
+  --color-warning: oklch(78% 0.14 80);
+  --color-warning-content: oklch(25% 0.03 80);
+
+  --color-error: oklch(63% 0.17 25);
+  --color-error-content: oklch(98% 0.01 25);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+
+  --border: 1px;
+}
+
+@plugin "daisyui/theme" {
+  name: 'softdark';
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(23% 0.006 260);
+  --color-base-200: oklch(19% 0.007 260);
+  --color-base-300: oklch(27% 0.008 260);
+  --color-base-content: oklch(90% 0.004 260);
+
+  --color-primary: oklch(70% 0.13 255);
+  --color-primary-content: oklch(20% 0.03 255);
+
+  --color-secondary: oklch(72% 0.11 300);
+  --color-secondary-content: oklch(20% 0.03 300);
+
+  --color-accent: oklch(74% 0.12 200);
+  --color-accent-content: oklch(20% 0.03 200);
+
+  --color-neutral: oklch(30% 0.015 260);
+  --color-neutral-content: oklch(92% 0.005 260);
+
+  --color-info: oklch(74% 0.12 220);
+  --color-info-content: oklch(20% 0.03 220);
+
+  --color-success: oklch(72% 0.13 155);
+  --color-success-content: oklch(18% 0.03 155);
+
+  --color-warning: oklch(80% 0.14 80);
+  --color-warning-content: oklch(22% 0.03 80);
+
+  --color-error: oklch(70% 0.16 25);
+  --color-error-content: oklch(18% 0.03 25);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+
+  --border: 1px;
+}
+
+/* Windows/Chrome renders subpixel-antialiased text with visible RGB color
+   fringing on dark backgrounds. Force grayscale antialiasing site-wide to
+   keep text crisp and neutral in both themes. */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Chrome/Edge tint autofilled inputs with a bright blue background via
+   -webkit-autofill internals, ignoring normal background-color. Override it
+   so autofilled fields match the current theme instead of standing out. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-base-content);
+  caret-color: var(--color-base-content);
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0 1000px var(--color-base-100) inset;
+}
