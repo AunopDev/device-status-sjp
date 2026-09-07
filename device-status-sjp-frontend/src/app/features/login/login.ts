@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -16,6 +16,8 @@ export class Login {
   readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
+  readonly sessionEnded = inject(ActivatedRoute).snapshot.queryParamMap.get('reason') === 'session-ended';
+
   username = signal('');
   password = signal('');
   showPassword = signal(false);
@@ -23,6 +25,7 @@ export class Login {
   errorMessage = signal('');
 
   submit(): void {
+    if (this.isLoading()) return;
     const username = this.username().trim();
     const password = this.password();
 

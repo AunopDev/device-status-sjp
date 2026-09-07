@@ -15,12 +15,22 @@
       <input
         type="text"
         class="grow"
-        placeholder="ค้นหา..."
+        placeholder="ค้นหาในรายการ"
+        aria-label="ค้นหาในรายการ"
+        #searchInput
         [value]="globalFilter()"
-        (input)="onSearchInput($any($event.target).value)"
+        (input)="onSearchInput(searchInput.value)"
       />
     </label>
 
+    @if (globalFilter()) {
+      <button type="button" class="btn btn-sm btn-ghost" (click)="onSearchInput('')">ล้างการค้นหา</button>
+    }
+    @if (hasAdditionalColumns()) {
+      <button type="button" class="btn btn-sm btn-ghost" [attr.aria-pressed]="showAllColumns()" (click)="showAllColumns.set(!showAllColumns())">
+        {{ showAllColumns() ? 'แสดงคอลัมน์หลัก' : 'แสดงทุกคอลัมน์' }}
+      </button>
+    }
     <div class="dt-count">
       พบ <span class="dt-count-value">{{ table.getFilteredRowModel().rows.length }}</span> รายการ
     </div>
@@ -77,7 +87,7 @@
           />
         </svg>
       </div>
-      <span class="dt-empty-text">{{ emptyMessage() }}</span>
+      <span class="dt-empty-text">{{ globalFilter() ? 'ไม่พบรายการที่ตรงกับคำค้นหา' : emptyMessage() }}</span>
     </div>
   } @else {
     <div class="dt-table-scroll">
@@ -150,72 +160,52 @@
       </table>
     </div>
 
-    <div class="dt-footer">
-      <label class="dt-pagesize">
-        <span class="dt-pagesize-label">แสดง</span>
-        <select
-          class="dt-pagesize-select select select-sm select-bordered"
-          [value]="pagination().pageSize"
-          (change)="onPageSizeChange($any($event.target).value)"
-        >
-          @for (size of pageSizeOptions(); track size) {
-            <option [value]="size">{{ size }}</option>
-          }
-        </select>
-        <span class="dt-pagesize-label">รายการต่อหน้า</span>
-      </label>
-
-      <div class="dt-pagination join">
-        <button
-          type="button"
-          class="dt-page-btn join-item btn btn-sm btn-ghost"
-          aria-label="หน้าก่อนหน้า"
-          title="หน้าก่อนหน้า"
-          [disabled]="!table.getCanPreviousPage()"
-          (click)="table.previousPage()"
-        >
-          ‹
-        </button>
-        <div class="dt-page-numbers join">
-          @for (page of pageNumbers(); track page) {
-            @if (pagination().pageIndex + 1 === page) {
-              <input
-                class="dt-page-number dt-page-current join-item input input-sm"
-                type="number"
-                min="1"
-                [max]="table.getPageCount() || 1"
-                [value]="page"
-                aria-label="หน้าปัจจุบัน"
-                title="พิมพ์เลขหน้าแล้วกด Enter"
-                (keydown.enter)="goToPageFromInput($any($event.target).value)"
-                (blur)="goToPageFromInput($any($event.target).value)"
-              />
-            } @else {
-              <button
-                type="button"
-                class="dt-page-number join-item btn btn-sm btn-ghost"
-                [attr.aria-label]="'หน้า ' + page"
-                (click)="goToPage(page)"
-              >
-                {{ page }}
-              </button>
+    <footer class="dt-footer">
+      <div class="dt-footer-info">
+        <p class="dt-range" role="status" aria-live="polite">
+          แสดง {{ pagination().pageIndex * pagination().pageSize + 1 }}–{{ pagination().pageIndex * pagination().pageSize + table.getRowModel().rows.length }}
+          จาก {{ table.getFilteredRowModel().rows.length }} รายการ
+        </p>
+        <label class="dt-pagesize">
+          <span>ต่อหน้า</span>
+          <select #pageSizeSelect class="select select-sm dt-pagesize-select"
+            [value]="pagination().pageSize" (change)="onPageSizeChange(pageSizeSelect.value)">
+            @for (size of pageSizeOptions(); track size) {
+              <option [value]="size">{{ size }}</option>
             }
-          }
-        </div>
-        <span class="dt-page-total">
-          {{ pagination().pageIndex + 1 }} / {{ table.getPageCount() || 1 }}
-        </span>
-        <button
-          type="button"
-          class="dt-page-btn join-item btn btn-sm btn-ghost"
-          aria-label="หน้าถัดไป"
-          title="หน้าถัดไป"
-          [disabled]="!table.getCanNextPage()"
-          (click)="table.nextPage()"
-        >
-          ›
-        </button>
+          </select>
+        </label>
       </div>
-    </div>
+
+      @if (table.getPageCount() > 1) {
+        <nav class="dt-pagination" aria-label="เปลี่ยนหน้าตาราง">
+          <div class="dt-page-controls">
+            <button type="button" class="btn btn-sm btn-ghost dt-page-btn"
+              aria-label="หน้าก่อนหน้า" [disabled]="!table.getCanPreviousPage()" (click)="table.previousPage()">
+              <span aria-hidden="true">‹</span><span class="dt-direction-label">ก่อนหน้า</span>
+            </button>
+            @for (page of pageNumbers(); track page) {
+              <button type="button" class="btn btn-sm btn-ghost dt-page-number"
+                [attr.aria-current]="pagination().pageIndex + 1 === page ? 'page' : null"
+                [attr.aria-label]="'หน้า ' + page" (click)="goToPage(page)">{{ page }}</button>
+            }
+            <span class="dt-mobile-page">หน้า {{ pagination().pageIndex + 1 }} / {{ table.getPageCount() }}</span>
+            <button type="button" class="btn btn-sm btn-ghost dt-page-btn"
+              aria-label="หน้าถัดไป" [disabled]="!table.getCanNextPage()" (click)="table.nextPage()">
+              <span class="dt-direction-label">ถัดไป</span><span aria-hidden="true">›</span>
+            </button>
+          </div>
+          <label class="dt-page-jump">
+            <span>ไปหน้า</span>
+            <input #pageJump type="number" class="input input-sm dt-page-input" min="1" step="1"
+              [max]="table.getPageCount()" [value]="pagination().pageIndex + 1"
+              aria-label="เลขหน้าที่ต้องการ"
+              (input)="goToPageFromInput(pageJump.value)"
+              (blur)="pageJump.value = (pagination().pageIndex + 1).toString()" />
+            <span>/ {{ table.getPageCount() }}</span>
+          </label>
+        </nav>
+      }
+    </footer>
   }
 </div>

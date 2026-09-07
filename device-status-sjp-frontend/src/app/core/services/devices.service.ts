@@ -11,6 +11,6 @@ export class DevicesService {
   private readonly http = inject(HttpClient);
 
   getAll(): Observable<DeviceData[]> {
-    return this.http.get<DeviceData[]>('http://localhost:3000/google-sheets/devices');
+    return this.http.get<DeviceData[]>('http://localhost:3000/device-status/devices');
   }
 }

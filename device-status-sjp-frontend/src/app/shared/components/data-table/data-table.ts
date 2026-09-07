@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   input,
   signal,
 } from '@angular/core';
@@ -71,7 +72,24 @@ export class DataTable<T extends RowData> {
   private lastAutoKeySignature = '';
   private lastAutoColumns: DataTableColumn<T>[] = [];
 
-  private readonly resolvedColumns = computed<DataTableColumn<T>[]>(() => {
+  readonly showAllColumns = signal(false);
+  private readonly defaultColumnLimit = 6;
+  private readonly secondaryColumnIds = new Set(['uuid', 'ref']);
+
+  readonly resolvedColumns = computed(() => {
+    const columns = this.availableColumns();
+    return this.showAllColumns() ? columns : columns.filter(column => !this.secondaryColumnIds.has(column.id ?? '')).slice(0, this.defaultColumnLimit);
+  });
+  readonly hasAdditionalColumns = computed(() => this.availableColumns().length > this.resolvedColumns().length || this.showAllColumns());
+
+  constructor() {
+    effect(() => {
+      this.data();
+      this.pagination.update(page => ({ ...page, pageIndex: 0 }));
+    });
+  }
+
+  private readonly availableColumns = computed<DataTableColumn<T>[]>(() => {
     const explicit = this.columns();
     if (explicit && explicit.length > 0) return explicit;
 
@@ -143,13 +161,13 @@ export class DataTable<T extends RowData> {
 
   goToPage(pageNumber: number): void {
     const pageIndex = pageNumber - 1;
-    if (pageIndex >= 0 && pageIndex < this.table.getPageCount()) {
+    if (Number.isInteger(pageNumber) && pageIndex >= 0 && pageIndex < this.table.getPageCount()) {
       this.table.setPageIndex(pageIndex);
     }
   }
 
   goToPageFromInput(value: string): void {
-    const pageNumber = Number.parseInt(value, 10);
+    const pageNumber = Number(value);
     if (Number.isInteger(pageNumber)) this.goToPage(pageNumber);
   }
 
@@ -159,11 +177,14 @@ export class DataTable<T extends RowData> {
    * offline/error -> error, in progress -> warning, everything else -> info).
    */
   badgeClass(value: unknown): string {
-    const text = String(value ?? '').toLowerCase();
-    if (/(online|completed|success|active|เสร็จ|ออนไลน์)/.test(text)) {
+    const text = String(value ?? '').trim().toLowerCase();
+    if (['', '—', 'ไม่ระบุ', 'unknown'].includes(text)) {
+      return 'badge-ghost bg-base-200 text-base-content/70';
+    }
+    if (/^(online|completed|success|active|activate|เสร็จ|ออนไลน์)$/.test(text)) {
       return 'badge-success bg-success/15 text-success';
     }
-    if (/(offline|error|failed|inactive|ออฟไลน์|ผิดพลาด)/.test(text)) {
+    if (/(offline|error|failed|inactive|deactivate|deactive|disabled|de[-_ ]?active|ออฟไลน์|ผิดพลาด|ปิดใช้งาน)/.test(text)) {
       return 'badge-error bg-error/15 text-error';
     }
     if (/(progress|pending|warning|กำลัง|รอ)/.test(text)) {
@@ -180,7 +201,7 @@ export class DataTable<T extends RowData> {
 function buildAutoColumns<T extends RowData>(
   keys: Set<string>,
 ): DataTableColumn<T>[] {
-  const priority = ['uuid', 'name', 'ref', 'status'];
+  const priority = ['name', 'index', 'status', 'state', 'province', 'ref', 'uuid'];
   const ordered = [
     ...priority.filter((k) => keys.has(k)),
     ...[...keys].filter((k) => !priority.includes(k)).sort(),
@@ -191,6 +212,7 @@ function buildAutoColumns<T extends RowData>(
     accessorFn: (row: T) => (row as Record<string, unknown>)[key],
     header: humanizeHeader(key),
     cell: (info) => formatCellValue(info.getValue()),
+    meta: { badge: key === 'status' || key === 'state' },
   }));
 }
 

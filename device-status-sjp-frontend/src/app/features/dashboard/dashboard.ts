@@ -13,8 +13,42 @@ import {
 
 type TabId = 'node' | 'device' | 'project';
 
-const PROJECT_ACTIVE_STATE = 'activate';
+const NODE_STATUS_UNKNOWN = 'ไม่ระบุ';
 const PROJECT_STATE_ALL = 'all';
+const DEVICE_TYPE_ALL = '';
+const DEVICE_STATUS_ALL = '';
+const DEVICE_STATUS_UNKNOWN = 'ไม่ระบุ';
+
+function deviceStatus(device: DeviceData): string {
+  const status = device['status'];
+  return typeof status === 'string' ? status.trim().toLowerCase() || DEVICE_STATUS_UNKNOWN : DEVICE_STATUS_UNKNOWN;
+}
+const DEVICE_TYPE_UNKNOWN = 'ไม่ระบุชนิด';
+const NODE_TYPE_ALL = '';
+const NODE_TYPE_UNKNOWN = 'ไม่ระบุชนิด';
+const PROJECT_AREA_ALL = '';
+const PROJECT_FIELD_UNKNOWN = 'ไม่ระบุ';
+
+function projectField(project: ProjectData, field: 'state' | 'region' | 'province'): string {
+  const value = project[field];
+  return typeof value === 'string' || typeof value === 'number'
+    ? String(value).trim() || PROJECT_FIELD_UNKNOWN
+    : PROJECT_FIELD_UNKNOWN;
+}
+
+function nodeType(node: NodeData): string {
+  const index = node['index'];
+  return (typeof index === 'string' || typeof index === 'number')
+    ? String(index).trim() || NODE_TYPE_UNKNOWN
+    : NODE_TYPE_UNKNOWN;
+}
+
+function deviceType(device: DeviceData): string {
+  const index = device['index'];
+  return (typeof index === 'string' || typeof index === 'number')
+    ? String(index).trim() || DEVICE_TYPE_UNKNOWN
+    : DEVICE_TYPE_UNKNOWN;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -31,9 +65,27 @@ export class Dashboard implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  readonly tabs: readonly { id: TabId; label: string }[] = [
+    { id: 'device', label: 'Device' },
+    { id: 'project', label: 'Project' },
+    { id: 'node', label: 'Node' },
+  ];
+  readonly allProjectStates = PROJECT_STATE_ALL;
+  readonly activeTabLabel = computed(() => this.tabs.find(tab => tab.id === this.activeTab())?.label ?? '');
+  readonly activeLoading = computed(() => this.activeTab() === 'project' ? this.projectsLoading() : this.activeTab() === 'node' ? this.nodesLoading() : this.devicesLoading());
+
+  reloadActiveTab(): void {
+    if (this.activeLoading()) return;
+    switch (this.activeTab()) {
+      case 'project': this.loadProjects(); break;
+      case 'node': this.loadNodes(); break;
+      case 'device': this.loadDevices(); break;
+    }
+  }
+
   readonly currentUser = this.authService.currentUser;
 
-  activeTab = signal<TabId>('project');
+  activeTab = signal<TabId>('device');
 
   nodes = signal<NodeData[]>([]);
   devices = signal<DeviceData[]>([]);
@@ -50,6 +102,7 @@ export class Dashboard implements OnInit {
   readonly nodeColumns: DataTableColumn<NodeData>[] = [
     { id: 'uuid', accessorKey: 'uuid', header: 'UUID' },
     { id: 'name', accessorKey: 'name', header: 'ชื่อ Node' },
+    { id: 'index', accessorFn: nodeType, header: 'ชนิด Node' },
     { id: 'ref', accessorKey: 'ref', header: 'Reference' },
     { id: 'province', accessorKey: 'province', header: 'จังหวัด' },
     { id: 'jnumber', accessorKey: 'jnumber', header: 'J-Number' },
@@ -57,13 +110,13 @@ export class Dashboard implements OnInit {
       id: 'status',
       accessorKey: 'status',
       header: 'สถานะ',
-      cell: (info) => (info.getValue() as string) || 'ไม่ระบุ',
+      cell: (info) => String(info.getValue() ?? '').trim() || NODE_STATUS_UNKNOWN,
       meta: { badge: true },
     },
   ];
 
   readonly projectColumns: DataTableColumn<ProjectData>[] = [
-    { id: 'uuid', accessorKey: 'uuid', header: 'UUID' },
+    { id: 'name', accessorKey: 'name', header: 'ชื่อ Project' },
     {
       id: 'state',
       accessorKey: 'state',
@@ -71,45 +124,78 @@ export class Dashboard implements OnInit {
       cell: (info) => String(info.getValue() ?? 'ไม่ระบุ'),
       meta: { badge: true },
     },
-    { id: 'name', accessorKey: 'name', header: 'ชื่อ Project' },
     { id: 'region', accessorKey: 'region', header: 'Region' },
     { id: 'province', accessorKey: 'province', header: 'จังหวัด' },
+    { id: 'uuid', accessorKey: 'uuid', header: 'UUID' },
   ];
 
-  readonly totalNodes = computed(() => this.nodes().length);
-  readonly onlineNodes = computed(
-    () =>
-      this.nodes().filter((node) => node.status?.toLowerCase() === 'online')
-        .length,
+  readonly nodeStateFilter = signal(PROJECT_STATE_ALL);
+  readonly allNodeTypes = NODE_TYPE_ALL;
+  readonly nodeTypeFilter = signal(NODE_TYPE_ALL);
+  readonly nodeTypes = computed(() =>
+    [...new Set(this.nodes().map(nodeType))].sort((first, second) =>
+      first.localeCompare(second, undefined, { numeric: true }),
+    ),
   );
-  readonly offlineNodes = computed(() => this.totalNodes() - this.onlineNodes());
+  readonly allDeviceTypes = DEVICE_TYPE_ALL;
+  readonly deviceTypeFilter = signal(DEVICE_TYPE_ALL);
+  readonly allDeviceStatuses = DEVICE_STATUS_ALL;
+  readonly deviceStatusFilter = signal(DEVICE_STATUS_ALL);
+  readonly deviceStatuses = computed(() => [...new Set(this.devices().map(deviceStatus))].sort());
+  readonly hasDeviceFilters = computed(() =>
+    this.deviceTypeFilter() !== DEVICE_TYPE_ALL || this.deviceStatusFilter() !== DEVICE_STATUS_ALL,
+  );
 
-  readonly totalDevices = computed(() => this.devices().length);
-  readonly totalProjects = computed(() => this.projects().length);
-  readonly activeProjects = computed(
-    () =>
-      this.projects().filter(
-        (project) =>
-          String(project['state'] ?? '').toLowerCase() === PROJECT_ACTIVE_STATE,
-      ).length,
+  clearDeviceFilters(): void {
+    this.deviceTypeFilter.set(DEVICE_TYPE_ALL);
+    this.deviceStatusFilter.set(DEVICE_STATUS_ALL);
+  }
+  readonly deviceTypes = computed(() =>
+    [...new Set(this.devices().map(deviceType))].sort((first, second) =>
+      first.localeCompare(second, undefined, { numeric: true }),
+    ),
   );
-  readonly inactiveProjects = computed(
-    () => this.totalProjects() - this.activeProjects(),
+  readonly filteredDevices = computed(() =>
+    this.devices().filter(device =>
+      (this.deviceTypeFilter() === DEVICE_TYPE_ALL || deviceType(device) === this.deviceTypeFilter()) &&
+      (this.deviceStatusFilter() === DEVICE_STATUS_ALL || deviceStatus(device) === this.deviceStatusFilter()),
+    ),
   );
+  readonly nodeStates = computed(() => [...new Set(this.nodes().map(node => node.status?.trim().toLowerCase() || NODE_STATUS_UNKNOWN))].sort());
+  readonly filteredNodes = computed(() => this.nodes().filter(node =>
+    (this.nodeStateFilter() === PROJECT_STATE_ALL || (node.status?.trim().toLowerCase() || NODE_STATUS_UNKNOWN) === this.nodeStateFilter()) &&
+    (this.nodeTypeFilter() === NODE_TYPE_ALL || nodeType(node) === this.nodeTypeFilter()),
+  ));
   readonly projectStateFilter = signal(PROJECT_STATE_ALL);
+  readonly allProjectAreas = PROJECT_AREA_ALL;
+  readonly projectRegionFilter = signal(PROJECT_AREA_ALL);
+  readonly projectProvinceFilter = signal(PROJECT_AREA_ALL);
+  readonly projectRegions = computed(() => [...new Set(this.projects().map(project => projectField(project, 'region')))].sort());
+  readonly projectProvinces = computed(() => [...new Set(this.projects()
+    .filter(project => this.projectRegionFilter() === PROJECT_AREA_ALL || projectField(project, 'region') === this.projectRegionFilter())
+    .map(project => projectField(project, 'province')))].sort());
+  readonly hasProjectFilters = computed(() => this.projectStateFilter() !== PROJECT_STATE_ALL ||
+    this.projectRegionFilter() !== PROJECT_AREA_ALL || this.projectProvinceFilter() !== PROJECT_AREA_ALL);
+
+  setProjectRegion(region: string): void {
+    this.projectRegionFilter.set(region);
+    this.projectProvinceFilter.set(PROJECT_AREA_ALL);
+  }
+
+  clearProjectFilters(): void {
+    this.projectStateFilter.set(PROJECT_STATE_ALL);
+    this.setProjectRegion(PROJECT_AREA_ALL);
+  }
   readonly projectStates = computed(() => {
-    const states = this.projects().map((project) => String(project['state'] ?? 'ไม่ระบุ'));
+    const states = this.projects().map((project) => projectField(project, 'state'));
     return [...new Set(states)].sort((first, second) => first.localeCompare(second));
   });
-  readonly projectStatusSummary = computed(() => this.projectStates().map((state) => ({
-    state,
-    count: this.projects().filter((project) => String(project['state'] ?? 'ไม่ระบุ') === state).length,
-  })));
   readonly filteredProjects = computed(() => {
     const selectedState = this.projectStateFilter();
-    if (selectedState === PROJECT_STATE_ALL) return this.projects();
     return this.projects().filter(
-      (project) => String(project['state'] ?? 'ไม่ระบุ') === selectedState,
+      (project) => (selectedState === PROJECT_STATE_ALL || projectField(project, 'state') === selectedState) &&
+        (this.projectRegionFilter() === PROJECT_AREA_ALL || projectField(project, 'region') === this.projectRegionFilter()) &&
+        (this.projectProvinceFilter() === PROJECT_AREA_ALL || projectField(project, 'province') === this.projectProvinceFilter()),
     );
   });
 
@@ -137,6 +223,7 @@ export class Dashboard implements OnInit {
   }
 
   loadNodes(): void {
+    this.nodesError.set('');
     this.nodesLoading.set(true);
     this.nodesService.getAll().subscribe({
       next: (data) => {
@@ -151,6 +238,7 @@ export class Dashboard implements OnInit {
   }
 
   loadDevices(): void {
+    this.devicesError.set('');
     this.devicesLoading.set(true);
     this.devicesService.getAll().subscribe({
       next: (data) => {
@@ -165,6 +253,7 @@ export class Dashboard implements OnInit {
   }
 
   loadProjects(): void {
+    this.projectsError.set('');
     this.projectsLoading.set(true);
     this.projectService.getAll().subscribe({
       next: (data) => {

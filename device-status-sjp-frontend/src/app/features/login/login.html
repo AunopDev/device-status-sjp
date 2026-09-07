@@ -36,12 +36,15 @@
       </div>
 
       <h1 class="login-title">Device Status SJP</h1>
-      <p class="login-subtitle">เข้าสู่ระบบเพื่อดูสถานะโปรเจกต์แบบเรียลไทม์</p>
+      <p class="login-subtitle">เข้าสู่ระบบเพื่อดูสถานะโปรเจกต์</p>
     </div>
 
     <form class="login-form" (ngSubmit)="submit()">
+      @if (sessionEnded) {
+        <p role="status" class="text-sm">เซสชันสิ้นสุดแล้ว กรุณาเข้าสู่ระบบอีกครั้ง</p>
+      }
       @if (errorMessage()) {
-        <div class="login-error alert alert-error">
+        <div class="login-error alert alert-error" role="alert">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="login-error-icon stroke-current"
@@ -162,7 +165,7 @@
         </label>
       </div>
 
-      <button type="submit" class="login-submit btn btn-primary" [class.btn-disabled]="isLoading()">
+      <button type="submit" class="login-submit btn btn-primary" [disabled]="isLoading()">
         @if (isLoading()) {
           <span class="loading loading-spinner loading-sm"></span>
           กำลังเข้าสู่ระบบ...
@@ -170,7 +173,6 @@
           เข้าสู่ระบบ
         }
       </button>
-      <div class="login-assurance"><span class="assurance-dot"></span><span>ข้อมูลจะถูกอัปเดตอัตโนมัติบนแดชบอร์ด</span></div>
     </form>
   </div>
 </div>

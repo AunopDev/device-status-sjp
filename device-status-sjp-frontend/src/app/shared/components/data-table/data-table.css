@@ -121,76 +121,32 @@
 }
 
 .dt-footer {
-  @apply flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-base-200/70;
+  @apply flex flex-wrap items-center justify-between gap-3 border-t border-base-200/70 px-5 py-3;
 }
-
-.dt-pagesize {
-  @apply flex items-center gap-2 text-sm text-base-content/50;
+.dt-footer-info { @apply flex flex-wrap items-center gap-x-5 gap-y-2; }
+.dt-range { @apply text-xs text-base-content/60; font-variant-numeric: tabular-nums; }
+.dt-pagesize { @apply flex items-center gap-2 text-xs text-base-content/60; }
+.dt-pagesize-select { @apply w-18 rounded-lg border-base-300 bg-base-100 shadow-none; }
+.dt-pagination { @apply flex flex-wrap items-center justify-end gap-3; }
+.dt-page-controls { @apply flex items-center gap-1; }
+.dt-page-number, .dt-page-btn { @apply h-9 min-w-9 rounded-lg border-transparent text-base-content/60 shadow-none; }
+.dt-page-number[aria-current="page"] { @apply bg-primary/10 text-primary font-semibold; }
+.dt-page-jump { @apply flex items-center gap-2 text-xs text-base-content/60; }
+.dt-page-input { @apply w-14 rounded-lg border-base-300 bg-base-100 text-center shadow-none; }
+.dt-mobile-page { display: none; }
+.dt-pagination button:focus-visible, .dt-footer select:focus-visible, .dt-page-input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  position: relative;
+  z-index: 1;
 }
-
-.dt-pagesize-label {
-  @apply whitespace-nowrap;
-}
-
-.dt-pagesize-select {
-  @apply rounded-lg;
-}
-
-.dt-pagination {
-  @apply flex flex-1 flex-wrap items-center justify-center text-sm;
-}
-
-.dt-page-numbers {
-  @apply flex flex-wrap items-center justify-center;
-}
-
-.dt-page-number {
-  @apply min-w-9 h-9 rounded-lg px-2 font-medium transition-all;
-}
-
-.dt-page-jump {
-  @apply flex items-center gap-1 ml-2 text-xs text-base-content/50;
-}
-
-.dt-page-current {
-  @apply w-9 border-0 bg-primary text-primary-content text-center outline-none ring-0 focus:bg-primary focus:ring-2 focus:ring-primary/20;
-}
-
-.dt-page-input {
-  @apply w-14 rounded-lg text-center font-medium focus:border-primary focus:outline-primary/20;
-}
-
-.dt-page-total {
-  @apply whitespace-nowrap rounded-lg bg-base-200/70 px-2.5 py-1.5 text-xs font-medium text-base-content/60 mx-2;
-}
-
-.dt-page-btn {
-  @apply min-w-9 rounded-lg text-base font-medium disabled:opacity-30;
-}
-
-.dt-page-indicator {
-  @apply bg-base-200/70 border-none font-medium text-base-content/70 whitespace-nowrap mx-1;
-}
-
 @media (max-width: 639px) {
-  .dt-footer {
-    @apply items-stretch px-3 py-3;
-  }
-
-  .dt-pagesize {
-    @apply justify-center;
-  }
-
-  .dt-pagination {
-    @apply w-full gap-0;
-  }
-
-  .dt-page-number,
-  .dt-page-btn {
-    @apply min-w-8 h-8 text-xs;
-  }
-
-  .dt-page-total {
-    @apply mx-1 px-2 py-1 text-[11px];
-  }
+  .dt-footer { @apply flex-col items-stretch px-3; }
+  .dt-footer-info { @apply justify-between; }
+  .dt-pagination { @apply flex-col items-stretch; }
+  .dt-page-controls { @apply flex w-full justify-between; }
+  .dt-page-number { display: none; }
+  .dt-page-btn, .dt-page-input, .dt-pagesize-select { min-height: 2.75rem; }
+  .dt-mobile-page { @apply block px-2 text-sm; }
+  .dt-page-jump { @apply justify-end; }
 }

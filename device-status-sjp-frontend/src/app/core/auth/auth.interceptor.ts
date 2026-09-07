@@ -14,10 +14,10 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(authenticatedRequest).pipe(
     catchError((error: unknown) => {
-      if (isUnauthorizedError(error)) {
+      if (token && isUnauthorizedError(error) && !request.url.endsWith('/auth/login')) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem('device-status-sjp:auth-user');
-        void router.navigateByUrl('/login');
+        void router.navigate(['/login'], { queryParams: { reason: 'session-ended' }, replaceUrl: true });
       }
       return throwError(() => error);
     }),
