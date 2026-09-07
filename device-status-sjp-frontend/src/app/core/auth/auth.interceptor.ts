@@ -1,8 +1,29 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 
 const TOKEN_KEY = 'device-status-sjp:auth-token';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
+  const router = inject(Router);
   const token = localStorage.getItem(TOKEN_KEY);
-  return next(token ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : request);
+  const authenticatedRequest = token
+    ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : request;
+
+  return next(authenticatedRequest).pipe(
+    catchError((error: unknown) => {
+      if (isUnauthorizedError(error)) {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem('device-status-sjp:auth-user');
+        void router.navigateByUrl('/login');
+      }
+      return throwError(() => error);
+    }),
+  );
 };
+
+function isUnauthorizedError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 401;
+}

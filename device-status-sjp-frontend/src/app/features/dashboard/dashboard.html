@@ -88,23 +88,12 @@
       </div>
     </header>
 
-    <section class="dashboard-intro">
+    <!-- <section class="dashboard-intro">
       <div>
-        <h2 class="dashboard-heading">สรุปโปรเจกต์</h2>
-        <p class="dashboard-description">ดูสถานะล่าสุดของโปรเจกต์ในระบบ</p>
+        <h2 class="dashboard-heading">Project</h2>
+        <p class="dashboard-description">รายการและสถานะของ Project ในระบบ</p>
       </div>
-    </section>
-
-    <section class="project-overview" aria-label="ภาพรวมสถานะโปรเจกต์">
-      <div class="status-breakdown">
-        <div class="breakdown-heading"><span>สถานะโปรเจกต์</span><span class="breakdown-total">ทั้งหมด {{ totalProjects() }} รายการ</span></div>
-        @for (summary of projectStatusSummary(); track summary.state) {
-          <button type="button" class="status-row" (click)="setProjectStateFilter(summary.state)">
-            <span class="status-row-name">{{ summary.state }}</span><strong>{{ summary.count }} รายการ</strong>
-          </button>
-        } @empty { <p class="empty-breakdown">กำลังรอข้อมูลโปรเจกต์</p> }
-      </div>
-    </section>
+    </section> -->
 
     <div role="tablist" class="dashboard-tabs">
       <a
@@ -194,58 +183,33 @@
       </div>
     }
 
-    @if (activeTab() === 'node') {
-      <section class="project-status-grid" aria-label="สรุปสถานะ Node">
-        <article class="project-status-card">
-          <span class="project-status-label">Node ทั้งหมด</span>
-          <strong class="project-status-value">{{ totalNodes() }}</strong>
-        </article>
-        <article class="project-status-card project-status-active">
-          <span class="project-status-label">Online</span>
-          <strong class="project-status-value">{{ onlineNodes() }}</strong>
-        </article>
-        <article class="project-status-card project-status-inactive">
-          <span class="project-status-label">Offline/ไม่ระบุ</span>
-          <strong class="project-status-value">{{ offlineNodes() }}</strong>
-        </article>
-      </section>
+    @switch (activeTab()) {
+      @case ('node') {
+        <app-data-table
+          [data]="nodes()"
+          [columns]="nodeColumns"
+          [isLoading]="nodesLoading()"
+          [errorMessage]="nodesError()"
+          emptyMessage="ไม่มีข้อมูล Node"
+        />
+      }
+      @case ('device') {
+        <app-data-table
+          [data]="devices()"
+          [isLoading]="devicesLoading()"
+          [errorMessage]="devicesError()"
+          emptyMessage="ไม่มีข้อมูล Device"
+        />
+      }
+      @case ('project') {
+        <app-data-table
+          [data]="filteredProjects()"
+          [columns]="projectColumns"
+          [isLoading]="projectsLoading()"
+          [errorMessage]="projectsError()"
+          emptyMessage="ไม่มีข้อมูล Project"
+        />
+      }
     }
-
-    <details class="details-panel">
-      <summary class="details-summary">
-        <span>ดูรายละเอียดข้อมูล</span>
-        <span class="details-summary-hint">{{ activeTab() === 'project' ? filteredProjects().length : activeTab() === 'node' ? nodes().length : devices().length }} รายการ</span>
-      </summary>
-      <div class="details-content">
-        @switch (activeTab()) {
-          @case ('node') {
-            <app-data-table
-              [data]="nodes()"
-              [columns]="nodeColumns"
-              [isLoading]="nodesLoading()"
-              [errorMessage]="nodesError()"
-              emptyMessage="ไม่มีข้อมูล Node"
-            />
-          }
-          @case ('device') {
-            <app-data-table
-              [data]="devices()"
-              [isLoading]="devicesLoading()"
-              [errorMessage]="devicesError()"
-              emptyMessage="ไม่มีข้อมูล Device"
-            />
-          }
-          @case ('project') {
-            <app-data-table
-              [data]="filteredProjects()"
-              [columns]="projectColumns"
-              [isLoading]="projectsLoading()"
-              [errorMessage]="projectsError()"
-              emptyMessage="ไม่มีข้อมูล Project"
-            />
-          }
-        }
-      </div>
-    </details>
   </div>
 </div>

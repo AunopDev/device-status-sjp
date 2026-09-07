@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
+const SESSION_DURATION_MS = 30 * 60 * 1000;
+
 @Injectable()
 export class SessionService {
-  private readonly sessions = new Set<string>();
+  private readonly sessions = new Map<string, number>();
 
   create(): string {
     const token = randomUUID();
-    this.sessions.add(token);
+    this.sessions.set(token, Date.now() + SESSION_DURATION_MS);
     return token;
   }
 
@@ -16,6 +18,12 @@ export class SessionService {
   }
 
   isValid(token: string): boolean {
-    return this.sessions.has(token);
+    const expiresAt = this.sessions.get(token);
+    if (expiresAt === undefined) return false;
+    if (Date.now() >= expiresAt) {
+      this.sessions.delete(token);
+      return false;
+    }
+    return true;
   }
 }
