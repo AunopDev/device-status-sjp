@@ -4,17 +4,21 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors();
+  const frontendOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:4200';
+  app.enableCors({ origin: frontendOrigin });
 
   const port = Number(process.env.PORT) || 3000;
 
   await app.listen(port);
 
   console.log(`Backend running at http://localhost:${port}`);
-  console.log(`Nodes API: http://localhost:${port}/nodes`);
-  console.log(`Devices API: http://localhost:${port}/devices`);
-  console.log(`Projects API: http://localhost:${port}/projects`);
-  console.log(`Users API: http://localhost:${port}/users`);
+  console.log(`Auth API: http://localhost:${port}/auth/login`);
+  console.log(`Users API: http://localhost:${port}/user`);
+  console.log(`Google Sheets API: http://localhost:${port}/google-sheets`);
+  console.log(`Users: http://localhost:${port}/google-sheets/users`);
+  console.log(`Nodes: http://localhost:${port}/google-sheets/nodes`);
+  console.log(`Devices: http://localhost:${port}/google-sheets/devices`);
+  console.log(`Projects: http://localhost:${port}/google-sheets/projects`);
 }
 
 bootstrap().catch((error: unknown) => {

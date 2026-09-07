@@ -4,7 +4,12 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": ["google-sheets-data/user.json"],
+    "assets": [
+      {
+        "include": "google-sheets/user.json",
+        "outDir": "dist/src"
+      }
+    ],
     "watchAssets": false
   }
 }

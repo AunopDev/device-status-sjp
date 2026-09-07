@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 
-import auth from './googleCredentials';
+import auth from './google-sheets-credentials';
 
 const sheets = google.sheets({ version: 'v4', auth });
 

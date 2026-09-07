@@ -2,14 +2,6 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UserService } from '../user/user.service';
 
-interface AuthenticatedUser {
-  uuid: string;
-  username: string;
-  email: string;
-  password_hash: string;
-  created_at: string;
-}
-
 @Injectable()
 export class AuthService {
   constructor(private readonly userService: UserService) {}
@@ -21,7 +13,7 @@ export class AuthService {
       return null;
     }
 
-    const authenticatedUser = user as unknown as AuthenticatedUser;
+    const authenticatedUser = user;
 
     const passwordMatches = await bcrypt.compare(
       password,

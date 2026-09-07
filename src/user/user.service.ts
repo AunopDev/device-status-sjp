@@ -10,18 +10,25 @@ interface RawUser {
   created_at: string;
 }
 
+export type PublicUser = Omit<RawUser, 'password_hash'>;
+
 @Injectable()
 export class UserService {
   private readonly usersFilePath = join(
     __dirname,
     '..',
-    'google-sheets-data',
+    'google-sheets',
     'user.json',
   );
 
   async findAll(): Promise<RawUser[]> {
     const raw = await readFile(this.usersFilePath, 'utf-8');
     return JSON.parse(raw) as RawUser[];
+  }
+
+  async findAllPublic(): Promise<PublicUser[]> {
+    const users = await this.findAll();
+    return users.map(({ password_hash: _password_hash, ...publicUser }) => publicUser);
   }
 
   async findByUsername(username: string): Promise<RawUser | null> {

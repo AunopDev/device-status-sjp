@@ -1,6 +1,3 @@
-// ========================================
-// External Dependencies
-// ========================================
 import dotenv from 'dotenv';
 dotenv.config();
 import path from 'path';
