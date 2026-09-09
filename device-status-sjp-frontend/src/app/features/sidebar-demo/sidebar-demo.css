@@ -1,0 +1,110 @@
+@reference '../../../styles.css';
+
+.sidebar-demo-page { @apply min-h-screen bg-base-200 p-4 sm:p-6; }
+.sidebar-demo-header { @apply mx-auto flex max-w-[96rem] flex-wrap items-end justify-between gap-4 pb-5; }
+.sidebar-demo-back { @apply text-sm text-primary hover:underline; }
+.sidebar-demo-header p { @apply mt-4 text-xs font-bold uppercase tracking-widest text-primary; }
+.sidebar-demo-header h1 { @apply mt-1 text-2xl font-semibold tracking-tight text-base-content; }
+.directory-page { @apply mx-auto max-w-[96rem] rounded-xl border border-base-300 bg-base-100 p-5; }
+.directory-back { @apply mb-4; }
+.directory-heading { @apply mb-5 flex flex-wrap items-end justify-between gap-3; }
+.directory-heading p { @apply text-xs font-semibold uppercase tracking-wider text-primary; }
+.directory-heading h2 { @apply mt-1 text-xl font-semibold tracking-tight text-base-content; }
+.directory-help { @apply mt-1 block text-sm font-normal text-base-content/60; }
+.directory-heading > span { @apply rounded-md bg-base-200 px-2.5 py-1 text-sm font-medium text-base-content/70; }
+.project-directory-list { @apply grid gap-2; }
+.directory-filters { @apply mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-base-300 bg-base-200/35 p-3; }
+.status-filter { @apply flex overflow-hidden rounded-lg border border-base-300 bg-base-100; }
+.status-filter button { @apply min-h-9 px-3 text-sm font-medium text-base-content/65 hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-primary; }
+.status-filter-selected { @apply bg-primary text-primary-content hover:bg-primary; }
+.directory-group-select { @apply ml-auto flex items-center gap-2 text-sm text-base-content/65; }
+.directory-group-select .select { @apply border-base-300 bg-base-100; }
+.node-directory-filters { @apply justify-start; }
+.project-group { @apply grid gap-2; }
+.project-group > h3 { @apply mt-3 flex items-center gap-2 px-1 text-sm font-semibold text-base-content/75; }
+.project-group > h3 span { @apply text-xs font-normal text-base-content/55; }
+.directory-project { @apply overflow-hidden rounded-xl border border-base-300 bg-base-100; }
+.directory-project-expanded { @apply border-primary/30; }
+.directory-project-summary { @apply flex w-full items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-primary/[0.035] focus-visible:outline-2 focus-visible:outline-primary; }
+.project-summary-title { @apply flex min-w-0 items-center gap-3; }
+.project-summary-chevron { @apply w-3 shrink-0 text-lg not-italic text-base-content/50; }
+.project-summary-icon { @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-base font-semibold not-italic text-primary; }
+.directory-project strong,
+.directory-node strong { @apply block text-sm font-semibold text-base-content; }
+.directory-project small,
+.directory-node small { @apply mt-1 block text-sm text-base-content/60; }
+.directory-project-status { @apply flex shrink-0 items-center gap-2; }
+.project-status-stat { @apply flex min-w-14 flex-col rounded-lg px-2.5 py-1.5 text-right; }
+.project-status-stat small { @apply text-[10px] font-medium leading-tight; }
+.project-status-stat b { @apply mt-0.5 text-sm font-semibold leading-tight; }
+.project-status-online { @apply bg-success/10 text-success; }
+.project-status-offline { @apply bg-error/10 text-error; }
+.directory-node > i { @apply ml-1 text-lg not-italic text-base-content/40; }
+.project-preview { @apply flex flex-wrap items-center gap-4 border-t border-base-300 bg-base-200/35 px-5 py-4; }
+.project-preview-summary { @apply grid grid-cols-2 gap-2 sm:grid-cols-4; }
+.project-preview-summary > span { @apply flex min-w-20 flex-col rounded-lg border border-base-300 bg-base-100 px-3 py-2; }
+.project-preview-summary small { @apply text-xs text-base-content/60; }
+.project-preview-summary b { @apply mt-1 text-base font-semibold text-base-content; }
+.project-preview-summary .preview-online { @apply border-success/25 bg-success/[0.05] text-success; }
+.project-preview-summary .preview-offline { @apply border-error/25 bg-error/[0.05] text-error; }
+.project-preview-summary .preview-online b,
+.project-preview-summary .preview-offline b { @apply text-current; }
+.project-preview-nodes { @apply flex min-w-72 flex-1 flex-wrap gap-2; }
+.project-preview-nodes > p { @apply w-full text-xs font-medium text-base-content/60; }
+.project-preview-node { @apply flex flex-col rounded-lg border border-base-300 bg-base-100 px-3 py-2 text-xs; }
+.project-preview-node b { @apply max-w-48 truncate font-medium text-base-content; }
+.project-preview-node small { @apply mt-1 inline-flex items-center gap-1 text-base-content/60; }
+.project-preview-node i { @apply ml-1 h-1.5 w-1.5 rounded-full; }
+.preview-dot-online { @apply bg-success; }
+.preview-dot-offline { @apply bg-error; }
+.project-preview-more { @apply text-base-content/55; }
+.node-directory-list { @apply grid gap-2; }
+.directory-node { @apply grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-xl border border-base-300 px-4 py-3.5 text-left transition-colors hover:border-primary/35 hover:bg-primary/[0.035] focus-visible:outline-2 focus-visible:outline-primary; }
+.directory-node-icon { @apply flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary; }
+.sidebar-layout { @apply mx-auto grid max-w-[96rem] min-h-[42rem] grid-cols-[23rem_minmax(0,1fr)] overflow-hidden rounded-xl border border-base-300 bg-base-100; }
+.sidebar-panel { @apply min-w-0 border-r border-base-300 bg-base-100; }
+.sidebar-panel-heading { @apply flex items-center justify-between border-b border-base-300 px-4 py-3 text-sm font-semibold text-base-content; }
+.sidebar-panel-heading strong { @apply rounded-md bg-base-200 px-2 py-0.5 text-xs text-base-content/70; }
+.sidebar-list { @apply max-h-[calc(100vh-13rem)] overflow-y-auto p-2; }
+.sidebar-project-name { @apply mb-2 truncate px-3 py-2 text-sm font-semibold text-base-content; }
+.sidebar-item-title { @apply truncate text-sm font-medium text-base-content; }
+.sidebar-item-meta { @apply mt-0.5 text-xs text-base-content/60; }
+.node-subitem { @apply flex w-full items-center justify-between gap-2 rounded-md px-3 py-2.5 text-left hover:bg-base-100 focus-visible:outline-2 focus-visible:outline-primary; }
+.node-subitem-selected { @apply bg-primary/10 hover:bg-primary/10; }
+.node-subitem-selected .sidebar-item-title { @apply text-primary; }
+.node-state { @apply mt-1 flex items-center gap-1.5 text-xs text-base-content/60; }
+.node-state b,
+.project-summary-status i { @apply h-1.5 w-1.5 rounded-full; }
+.node-online { @apply text-success; }
+.node-offline { @apply text-error; }
+.node-state .node-online,
+.node-state .node-offline { @apply h-1.5 w-1.5 rounded-full; }
+.node-state .node-online { @apply bg-success; }
+.node-state .node-offline { @apply ml-2 bg-error; }
+.device-panel { @apply min-w-0 bg-base-100; --data-table-border: 0; --data-table-radius: 0; --data-table-shadow: none; }
+.device-panel-heading { @apply flex flex-wrap items-center justify-between gap-3 border-b border-base-300 px-5 py-4; }
+.device-panel-heading p { @apply text-xs text-base-content/60; }
+.device-panel-heading h2 { @apply mt-0.5 text-lg font-semibold text-base-content; }
+.device-panel-heading > span { @apply rounded-md bg-primary/10 px-2.5 py-1 text-sm font-semibold text-primary; }
+
+@media (max-width: 900px) {
+  .sidebar-layout { @apply grid-cols-[18rem_minmax(0,1fr)]; }
+  .sidebar-list { @apply max-h-64; }
+}
+@media (max-width: 639px) {
+  .sidebar-demo-page { @apply p-0; }
+  .sidebar-demo-header { @apply px-4 py-4; }
+  .sidebar-layout { @apply grid-cols-1 rounded-none border-x-0; }
+  .directory-page { @apply rounded-none border-x-0 p-3; }
+  .directory-project-summary { @apply items-start p-3; }
+  .directory-project-status { @apply gap-1; }
+  .project-status-stat { @apply min-w-12 px-2; }
+  .project-preview { @apply items-stretch px-3; }
+  .directory-filters { @apply gap-2 p-2; }
+  .directory-group-select { @apply ml-0 w-full justify-between; }
+  .directory-node { @apply grid-cols-[auto_minmax(0,1fr)_auto]; }
+  .directory-node > i { @apply hidden; }
+  .sidebar-panel { @apply border-r-0 border-b border-base-300; }
+  .sidebar-list { @apply flex max-h-none overflow-x-auto p-2; }
+  .project-item { @apply mb-0 min-w-64; }
+}

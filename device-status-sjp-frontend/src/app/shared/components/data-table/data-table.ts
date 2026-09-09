@@ -10,8 +10,14 @@ import {
 import {
   RowData,
   ColumnDef,
+  ExpandedState,
+  GroupingState,
   columnFilteringFeature,
+  columnGroupingFeature,
+  rowExpandingFeature,
+  createExpandedRowModel,
   createFilteredRowModel,
+  createGroupedRowModel,
   createPaginatedRowModel,
   createSortedRowModel,
   filterFn_includesString,
@@ -26,10 +32,14 @@ import {
 
 const features = tableFeatures({
   columnFilteringFeature,
+  columnGroupingFeature,
   globalFilteringFeature,
+  rowExpandingFeature,
   rowSortingFeature,
   rowPaginationFeature,
   filteredRowModel: createFilteredRowModel(),
+  groupedRowModel: createGroupedRowModel(),
+  expandedRowModel: createExpandedRowModel(),
   sortedRowModel: createSortedRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
   filterFns: { includesString: filterFn_includesString },
@@ -62,10 +72,15 @@ export class DataTable<T extends RowData> {
   emptyMessage = input('ไม่มีข้อมูล');
   pageSize = input(10);
   pageSizeOptions = input([10, 20, 30]);
+  groupBy = input('');
 
   globalFilter = signal('');
   sorting = signal<{ id: string; desc: boolean }[]>([]);
   pagination = signal({ pageIndex: 0, pageSize: this.pageSize() });
+  expanded = signal<ExpandedState>(true);
+  readonly grouping = computed<GroupingState>(() =>
+    this.groupBy() ? [this.groupBy()] : [],
+  );
 
   readonly skeletonRows = [0, 1, 2, 3, 4];
 
@@ -85,7 +100,9 @@ export class DataTable<T extends RowData> {
   constructor() {
     effect(() => {
       this.data();
+      this.groupBy();
       this.pagination.update(page => ({ ...page, pageIndex: 0 }));
+      this.expanded.set(true);
     });
   }
 
@@ -118,6 +135,8 @@ export class DataTable<T extends RowData> {
       globalFilter: this.globalFilter(),
       sorting: this.sorting(),
       pagination: this.pagination(),
+      grouping: this.grouping(),
+      expanded: this.expanded(),
     },
     globalFilterFn: 'includesString',
     onGlobalFilterChange: (updater) => {
@@ -134,6 +153,9 @@ export class DataTable<T extends RowData> {
       this.pagination.set(
         typeof updater === 'function' ? updater(this.pagination()) : updater,
       );
+    },
+    onExpandedChange: (updater) => {
+      this.expanded.set(typeof updater === 'function' ? updater(this.expanded()) : updater);
     },
   }));
 
@@ -201,7 +223,7 @@ export class DataTable<T extends RowData> {
 function buildAutoColumns<T extends RowData>(
   keys: Set<string>,
 ): DataTableColumn<T>[] {
-  const priority = ['name', 'index', 'status', 'state', 'province', 'ref', 'uuid'];
+  const priority = ['name', 'index', 'status', 'node_name', 'project_name', 'state', 'province', 'ref', 'uuid'];
   const ordered = [
     ...priority.filter((k) => keys.has(k)),
     ...[...keys].filter((k) => !priority.includes(k)).sort(),
@@ -217,6 +239,14 @@ function buildAutoColumns<T extends RowData>(
 }
 
 function humanizeHeader(key: string): string {
+  const contextualHeaders: Record<string, string> = {
+    node_name: 'เสา / Node',
+    node_uuid: 'UUID เสา / Node',
+    project_name: 'Project',
+    project_uuid: 'UUID Project',
+  };
+  const contextualHeader = contextualHeaders[key];
+  if (contextualHeader) return contextualHeader;
   return key.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 

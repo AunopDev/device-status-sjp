@@ -24,16 +24,20 @@
     </label>
 
     @if (globalFilter()) {
-      <button type="button" class="btn btn-sm btn-ghost" (click)="onSearchInput('')">ล้างการค้นหา</button>
+      <button type="button" class="btn btn-sm btn-ghost" (click)="onSearchInput('')">
+        ล้างการค้นหา
+      </button>
     }
     @if (hasAdditionalColumns()) {
-      <button type="button" class="btn btn-sm btn-ghost" [attr.aria-pressed]="showAllColumns()" (click)="showAllColumns.set(!showAllColumns())">
+      <button
+        type="button"
+        class="btn btn-sm btn-ghost dt-column-toggle"
+        [attr.aria-pressed]="showAllColumns()"
+        (click)="showAllColumns.set(!showAllColumns())"
+      >
         {{ showAllColumns() ? 'แสดงคอลัมน์หลัก' : 'แสดงทุกคอลัมน์' }}
       </button>
     }
-    <div class="dt-count">
-      พบ <span class="dt-count-value">{{ table.getFilteredRowModel().rows.length }}</span> รายการ
-    </div>
   </div>
 
   @if (isLoading()) {
@@ -87,11 +91,13 @@
           />
         </svg>
       </div>
-      <span class="dt-empty-text">{{ globalFilter() ? 'ไม่พบรายการที่ตรงกับคำค้นหา' : emptyMessage() }}</span>
+      <span class="dt-empty-text">{{
+        globalFilter() ? 'ไม่พบรายการที่ตรงกับคำค้นหา' : emptyMessage()
+      }}</span>
     </div>
   } @else {
     <div class="dt-table-scroll">
-      <table class="table">
+      <table class="table" [class.dt-table-expanded]="showAllColumns()">
         <thead>
           @for (headerGroup of table.getHeaderGroups(); track headerGroup.id) {
             <tr class="dt-thead-row">
@@ -127,10 +133,18 @@
 
         <tbody>
           @for (row of table.getRowModel().rows; track row.id) {
-            <tr class="dt-row">
+            <tr class="dt-row" [class.dt-group-row]="row.getIsGrouped()">
               @for (cell of row.getAllCells(); track cell.id) {
                 <td class="dt-td">
-                  @if ($any(cell.column.columnDef.meta)?.badge) {
+                  @if (cell.getIsGrouped()) {
+                    <button type="button" class="dt-group-toggle" (click)="row.toggleExpanded()">
+                      <span>{{ row.getIsExpanded() ? '⌄' : '›' }}</span>
+                      <strong>{{ cell.getValue() }}</strong>
+                      <small>{{ row.getLeafRows().length }} อุปกรณ์</small>
+                    </button>
+                  } @else if (row.getIsGrouped()) {
+                    <span class="dt-group-empty">—</span>
+                  } @else if ($any(cell.column.columnDef.meta)?.badge) {
                     <ng-container
                       *flexRender="
                         cell.column.columnDef.cell;
@@ -163,13 +177,19 @@
     <footer class="dt-footer">
       <div class="dt-footer-info">
         <p class="dt-range" role="status" aria-live="polite">
-          แสดง {{ pagination().pageIndex * pagination().pageSize + 1 }}–{{ pagination().pageIndex * pagination().pageSize + table.getRowModel().rows.length }}
+          แสดง {{ pagination().pageIndex * pagination().pageSize + 1 }}–{{
+            pagination().pageIndex * pagination().pageSize + table.getRowModel().rows.length
+          }}
           จาก {{ table.getFilteredRowModel().rows.length }} รายการ
         </p>
         <label class="dt-pagesize">
           <span>ต่อหน้า</span>
-          <select #pageSizeSelect class="select select-sm dt-pagesize-select"
-            [value]="pagination().pageSize" (change)="onPageSizeChange(pageSizeSelect.value)">
+          <select
+            #pageSizeSelect
+            class="select select-sm dt-pagesize-select"
+            [value]="pagination().pageSize"
+            (change)="onPageSizeChange(pageSizeSelect.value)"
+          >
             @for (size of pageSizeOptions(); track size) {
               <option [value]="size">{{ size }}</option>
             }
@@ -180,28 +200,53 @@
       @if (table.getPageCount() > 1) {
         <nav class="dt-pagination" aria-label="เปลี่ยนหน้าตาราง">
           <div class="dt-page-controls">
-            <button type="button" class="btn btn-sm btn-ghost dt-page-btn"
-              aria-label="หน้าก่อนหน้า" [disabled]="!table.getCanPreviousPage()" (click)="table.previousPage()">
+            <button
+              type="button"
+              class="btn btn-sm btn-ghost dt-page-btn"
+              aria-label="หน้าก่อนหน้า"
+              [disabled]="!table.getCanPreviousPage()"
+              (click)="table.previousPage()"
+            >
               <span aria-hidden="true">‹</span><span class="dt-direction-label">ก่อนหน้า</span>
             </button>
             @for (page of pageNumbers(); track page) {
-              <button type="button" class="btn btn-sm btn-ghost dt-page-number"
+              <button
+                type="button"
+                class="btn btn-sm btn-ghost dt-page-number"
                 [attr.aria-current]="pagination().pageIndex + 1 === page ? 'page' : null"
-                [attr.aria-label]="'หน้า ' + page" (click)="goToPage(page)">{{ page }}</button>
+                [attr.aria-label]="'หน้า ' + page"
+                (click)="goToPage(page)"
+              >
+                {{ page }}
+              </button>
             }
-            <span class="dt-mobile-page">หน้า {{ pagination().pageIndex + 1 }} / {{ table.getPageCount() }}</span>
-            <button type="button" class="btn btn-sm btn-ghost dt-page-btn"
-              aria-label="หน้าถัดไป" [disabled]="!table.getCanNextPage()" (click)="table.nextPage()">
+            <span class="dt-mobile-page"
+              >หน้า {{ pagination().pageIndex + 1 }} / {{ table.getPageCount() }}</span
+            >
+            <button
+              type="button"
+              class="btn btn-sm btn-ghost dt-page-btn"
+              aria-label="หน้าถัดไป"
+              [disabled]="!table.getCanNextPage()"
+              (click)="table.nextPage()"
+            >
               <span class="dt-direction-label">ถัดไป</span><span aria-hidden="true">›</span>
             </button>
           </div>
           <label class="dt-page-jump">
             <span>ไปหน้า</span>
-            <input #pageJump type="number" class="input input-sm dt-page-input" min="1" step="1"
-              [max]="table.getPageCount()" [value]="pagination().pageIndex + 1"
+            <input
+              #pageJump
+              type="number"
+              class="input input-sm dt-page-input"
+              min="1"
+              step="1"
+              [max]="table.getPageCount()"
+              [value]="pagination().pageIndex + 1"
               aria-label="เลขหน้าที่ต้องการ"
               (input)="goToPageFromInput(pageJump.value)"
-              (blur)="pageJump.value = (pagination().pageIndex + 1).toString()" />
+              (blur)="pageJump.value = (pagination().pageIndex + 1).toString()"
+            />
             <span>/ {{ table.getPageCount() }}</span>
           </label>
         </nav>

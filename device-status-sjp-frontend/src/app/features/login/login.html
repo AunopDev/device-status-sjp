@@ -6,18 +6,40 @@
     [attr.aria-label]="themeService.isDark() ? 'สลับเป็นธีมสว่าง' : 'สลับเป็นธีมมืด'"
   >
     @if (themeService.isDark()) {
-      <svg xmlns="http://www.w3.org/2000/svg" class="login-theme-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="login-theme-icon"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+        />
       </svg>
     } @else {
-      <svg xmlns="http://www.w3.org/2000/svg" class="login-theme-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="login-theme-icon"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
+        />
       </svg>
     }
   </button>
 
-  <div class="login-container">
-    <div class="login-header">
+  <main class="login-container" aria-labelledby="login-heading">
+    <header class="login-header">
       <div class="login-icon">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -35,13 +57,18 @@
         </svg>
       </div>
 
-      <h1 class="login-title">Device Status SJP</h1>
-      <p class="login-subtitle">เข้าสู่ระบบเพื่อดูสถานะโปรเจกต์</p>
-    </div>
+      <span class="login-title">Device Status SJP</span>
+    </header>
 
-    <form class="login-form" (ngSubmit)="submit()">
+    <form class="login-form" (ngSubmit)="submit()" [attr.aria-busy]="isLoading()">
+      <!-- <div class="login-form-heading">
+        <h1 id="login-heading" class="login-heading">เข้าสู่ระบบ</h1>
+        <p class="login-subtitle">ตรวจสอบสถานะอุปกรณ์ โครงการ และ Node</p>
+      </div> -->
       @if (sessionEnded) {
-        <p role="status" class="text-sm">เซสชันสิ้นสุดแล้ว กรุณาเข้าสู่ระบบอีกครั้ง</p>
+        <p role="status" class="login-session-message">
+          เซสชันสิ้นสุดแล้ว กรุณาเข้าสู่ระบบอีกครั้ง
+        </p>
       }
       @if (errorMessage()) {
         <div class="login-error alert alert-error" role="alert">
@@ -84,7 +111,6 @@
             id="username"
             name="username"
             class="grow"
-            placeholder="กรอกชื่อผู้ใช้"
             autocomplete="username"
             [ngModel]="username()"
             (ngModelChange)="username.set($event)"
@@ -114,7 +140,6 @@
             id="password"
             name="password"
             class="grow"
-            placeholder="กรอกรหัสผ่าน"
             autocomplete="current-password"
             [ngModel]="password()"
             (ngModelChange)="password.set($event)"
@@ -124,6 +149,7 @@
             class="login-toggle-visibility"
             (click)="togglePasswordVisibility()"
             [attr.aria-label]="showPassword() ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
+            [attr.aria-pressed]="showPassword()"
           >
             @if (showPassword()) {
               <svg
@@ -174,5 +200,5 @@
         }
       </button>
     </form>
-  </div>
+  </main>
 </div>

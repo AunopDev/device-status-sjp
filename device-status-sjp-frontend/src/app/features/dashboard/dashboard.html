@@ -83,173 +83,367 @@
               d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
             />
           </svg>
-          ออกจากระบบ
+          <span class="dashboard-logout-label">ออกจากระบบ</span>
         </button>
       </div>
     </header>
 
-    <nav class="dashboard-tabs" aria-label="ประเภทข้อมูล">
-      @for (tab of tabs; track tab.id) {
+    <main class="dashboard-workspace" aria-label="ภาพรวมโครงการและอุปกรณ์">
+      <div class="workspace-heading">
+        <div>
+          <p class="dashboard-eyebrow">ศูนย์ติดตามสถานะ</p>
+          <h2 class="dashboard-section-title">
+            @if (activeView() === 'devices') {
+              อุปกรณ์ทั้งหมด
+            } @else if (activeView() === 'nodes') {
+              จุดติดตั้งทั้งหมด
+            } @else if (selectedNode(); as node) {
+              {{ node.name }}
+            } @else if (selectedProject(); as project) {
+              {{ project.name }}
+            } @else {
+              เลือกโครงการ
+            }
+          </h2>
+        </div>
+        <div class="dashboard-refresh">
+          <a class="btn btn-sm btn-primary" routerLink="/group-demo">Group Demo</a>
+          <button type="button" class="btn btn-sm btn-ghost" (click)="openSidebarDemo()">
+            Sidebar demo
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm btn-ghost"
+            aria-label="โหลดข้อมูล Device ใหม่"
+            [disabled]="devicesLoading()"
+            (click)="reloadDevices()"
+          >
+            {{ devicesLoading() ? 'กำลังโหลด…' : 'โหลดข้อมูลใหม่' }}
+          </button>
+        </div>
+      </div>
+
+      <nav class="dashboard-view-tabs" aria-label="รูปแบบการแสดงผล">
         <button
           type="button"
-          class="dashboard-tab"
-          [class.dashboard-tab-active]="activeTab() === tab.id"
-          [attr.aria-current]="activeTab() === tab.id ? 'page' : null"
-          (click)="setTab(tab.id)"
+          class="dashboard-view-tab"
+          [class.dashboard-view-tab-active]="activeView() === 'projects'"
+          [attr.aria-current]="activeView() === 'projects' ? 'page' : null"
+          (click)="setActiveView('projects')"
         >
-          {{ tab.label }}
+          โครงการ
         </button>
-      }
-    </nav>
-    <section class="dashboard-intro">
-      <h2 class="dashboard-heading">{{ activeTabLabel() }}</h2>
-      <button
-        type="button"
-        class="btn btn-sm btn-outline"
-        [disabled]="activeLoading()"
-        (click)="reloadActiveTab()"
-      >
-        {{ activeLoading() ? 'กำลังโหลด…' : 'โหลดข้อมูลใหม่' }}
-      </button>
-    </section>
+        <button
+          type="button"
+          class="dashboard-view-tab"
+          [class.dashboard-view-tab-active]="activeView() === 'nodes'"
+          [attr.aria-current]="activeView() === 'nodes' ? 'page' : null"
+          (click)="setActiveView('nodes')"
+        >
+          จุดติดตั้ง
+        </button>
+        <button
+          type="button"
+          class="dashboard-view-tab"
+          [class.dashboard-view-tab-active]="activeView() === 'devices'"
+          [attr.aria-current]="activeView() === 'devices' ? 'page' : null"
+          (click)="setActiveView('devices')"
+        >
+          อุปกรณ์ทั้งหมด
+        </button>
+      </nav>
 
-    @if (activeTab() === 'project') {
-      <div class="project-filter-row">
-        <label class="project-filter-label" for="project-state-filter">กรองตามสถานะ</label>
-        <select
-          id="project-state-filter"
-          #stateFilter
-          [value]="projectStateFilter()"
-          class="select select-sm select-bordered"
-          (change)="setProjectStateFilter(stateFilter.value)"
-        >
-          <option value="all">ทุกสถานะ</option>
-          @for (state of projectStates(); track state) {
-            <option [value]="state">{{ state }}</option>
+      @if (activeView() === 'nodes') {
+        <section class="dashboard-nodes" aria-label="รายการจุดติดตั้งทั้งหมด">
+          <div class="directory-hero">
+            <div>
+              <span class="directory-kicker">รายการจุดติดตั้ง</span>
+              <h3>จุดติดตั้งทั้งหมด</h3>
+              <p>เลือกจุดติดตั้งเพื่อดูอุปกรณ์</p>
+            </div>
+            <div class="directory-summary">
+              <span
+                ><strong>{{ allNodes().length | number }}</strong> จุดติดตั้ง</span
+              >
+              <span
+                ><strong>{{ devices().length | number }}</strong> อุปกรณ์</span
+              >
+            </div>
+          </div>
+          <div class="node-list">
+            @for (node of allNodes(); track node.projectKey + ':' + node.key) {
+              <button type="button" class="node-row" (click)="selectDirectoryNode(node)">
+                <span class="node-location-icon" aria-hidden="true">⌖</span>
+                <span class="node-row-main">
+                  <span class="node-row-name">{{ node.name }}</span>
+                  <span class="node-row-meta"
+                    >{{ node.projectName }} · {{ node.deviceCount | number }} อุปกรณ์</span
+                  >
+                </span>
+                <span class="node-health">
+                  <span class="status-online"><i></i>{{ node.onlineCount | number }} Online</span>
+                  <span class="status-offline"
+                    ><i></i>{{ node.offlineCount | number }} Offline</span
+                  >
+                </span>
+                <span class="node-open" aria-hidden="true">→</span>
+              </button>
+            }
+          </div>
+        </section>
+      } @else if (activeView() === 'devices') {
+        <section class="all-devices" aria-label="รายการอุปกรณ์ทั้งหมด">
+          <div class="all-devices-heading">
+            <div>
+              <h3>รายการอุปกรณ์</h3>
+              <p>ค้นหาและกรองอุปกรณ์จากทุกโครงการ</p>
+            </div>
+            <span class="dashboard-total">{{ allFilteredDevices().length | number }} รายการ</span>
+          </div>
+          <div class="dashboard-filter-area">
+            <section class="device-filters" aria-label="ตัวกรองอุปกรณ์">
+              <div class="device-status-options" role="group" aria-label="กรองตามสถานะ">
+                @for (option of deviceStatusOptions(); track option.value) {
+                  <button
+                    type="button"
+                    class="device-status-option"
+                    [class.device-status-selected]="deviceStatusFilter() === option.value"
+                    [attr.aria-pressed]="deviceStatusFilter() === option.value"
+                    (click)="deviceStatusFilter.set(option.value)"
+                  >
+                    <span>{{ option.label }}</span>
+                    <span class="device-status-count">{{ option.count | number }}</span>
+                  </button>
+                }
+              </div>
+              <div class="filter-controls">
+                <label class="filter-select" for="all-device-type-filter">
+                  <span>ชนิดอุปกรณ์</span>
+                  <select
+                    id="all-device-type-filter"
+                    #allDeviceFilter
+                    class="select select-sm"
+                    [value]="deviceTypeFilter()"
+                    (change)="deviceTypeFilter.set(allDeviceFilter.value)"
+                  >
+                    <option [value]="allDeviceTypes">ทุกชนิด</option>
+                    @for (type of deviceTypes(); track type) {
+                      <option [value]="type">{{ type }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="filter-select">
+                  <span>Project</span>
+                  <select #projectSelect class="select select-sm" [value]="projectFilter()" (change)="projectFilter.set(projectSelect.value)">
+                    <option value="">ทุก Project</option>
+                    @for (project of projectOptions(); track project) { <option [value]="project">{{ project }}</option> }
+                  </select>
+                </label>
+                <label class="filter-select">
+                  <span>Region</span>
+                  <select #regionSelect class="select select-sm" [value]="regionFilter()" (change)="regionFilter.set(regionSelect.value)">
+                    <option value="">ทุก Region</option>
+                    @for (region of regionOptions(); track region) { <option [value]="region">{{ region }}</option> }
+                  </select>
+                </label>
+                <label class="filter-select">
+                  <span>Province</span>
+                  <select #provinceSelect class="select select-sm" [value]="provinceFilter()" (change)="provinceFilter.set(provinceSelect.value)">
+                    <option value="">ทุก Province</option>
+                    @for (province of provinceOptions(); track province) { <option [value]="province">{{ province }}</option> }
+                  </select>
+                </label>
+                <label class="filter-select">
+                  <span>จุดติดตั้ง</span>
+                  <select #nodeSelect class="select select-sm" [value]="nodeFilter()" (change)="nodeFilter.set(nodeSelect.value)">
+                    <option value="">ทุกจุดติดตั้ง</option>
+                    @for (node of nodeOptions(); track node) { <option [value]="node">{{ node }}</option> }
+                  </select>
+                </label>
+                <label class="filter-select">
+                  <span>จัดกลุ่ม</span>
+                  <select #groupSelect class="select select-sm" [value]="deviceGroupBy()" (change)="deviceGroupBy.set(groupSelect.value)">
+                    <option value="">ไม่จัดกลุ่ม</option>
+                    <option value="project_name">Project</option>
+                    <option value="project_region">Region</option>
+                    <option value="project_province">Province</option>
+                    <option value="node_name">จุดติดตั้ง / Node</option>
+                    <option value="index">ชนิดอุปกรณ์</option>
+                  </select>
+                </label>
+                @if (hasDeviceFilters()) {
+                  <button type="button" class="btn btn-sm btn-ghost" (click)="clearDeviceFilters()">
+                    ล้างตัวกรอง
+                  </button>
+                }
+              </div>
+            </section>
+          </div>
+          <app-data-table
+            [data]="allFilteredDevices()"
+            [groupBy]="deviceGroupBy()"
+            [isLoading]="devicesLoading()"
+            [errorMessage]="devicesError()"
+            [emptyMessage]="
+              hasDeviceFilters() ? 'ไม่พบอุปกรณ์ตามตัวกรองที่เลือก' : 'ไม่มีข้อมูล Device'
+            "
+          />
+        </section>
+      } @else if (!selectedProject()) {
+        <section class="dashboard-projects" aria-label="รายการโครงการ">
+          <div class="directory-hero">
+            <div>
+              <span class="directory-kicker">รายการโครงการ</span>
+              <h3>โครงการ</h3>
+              <p>จุดติดตั้งและอุปกรณ์ในแต่ละโครงการ</p>
+            </div>
+            <div class="directory-summary">
+              <span
+                ><strong>{{ projects().length | number }}</strong> โครงการ</span
+              >
+              <span
+                ><strong>{{ devices().length | number }}</strong> อุปกรณ์</span
+              >
+            </div>
+          </div>
+          @if (devicesLoading()) {
+            <div class="dashboard-list-loading">
+              <span class="loading loading-spinner loading-sm"></span> กำลังโหลดโครงการ…
+            </div>
+          } @else if (projects().length === 0) {
+            <p class="dashboard-list-empty">ไม่มีข้อมูลโครงการจากอุปกรณ์ที่โหลดได้</p>
+          } @else {
+            <div class="project-grid">
+              @for (project of projects(); track project.key) {
+                <button type="button" class="project-card" (click)="selectProject(project)">
+                  <span class="project-card-main">
+                    <span class="project-card-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path
+                          d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-5h6v5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </span>
+                    <span>
+                      <span class="project-card-name">{{ project.name }}</span>
+                      <span class="project-card-meta"
+                        >{{ project.nodeCount | number }} จุดติดตั้ง ·
+                        {{ project.deviceCount | number }} อุปกรณ์</span
+                      >
+                    </span>
+                  </span>
+                  <span class="project-card-status">
+                    <span class="status-online">{{ project.onlineCount | number }} Online</span>
+                    <span class="status-offline">{{ project.offlineCount | number }} Offline</span>
+                    <span class="project-card-action"
+                      >ดูจุดติดตั้ง <b aria-hidden="true">→</b></span
+                    >
+                  </span>
+                </button>
+              }
+            </div>
           }
-        </select>
-        <label class="project-filter-label" for="project-region-filter">Region</label>
-        <select
-          id="project-region-filter"
-          #regionFilter
-          class="select select-sm select-bordered"
-          [value]="projectRegionFilter()"
-          (change)="setProjectRegion(regionFilter.value)"
-        >
-          <option [value]="allProjectAreas">ทุก Region</option>
-          @for (region of projectRegions(); track region) {
-            <option [value]="region">{{ region }}</option>
-          }
-        </select>
-        <label class="project-filter-label" for="project-province-filter">จังหวัด</label>
-        <select
-          id="project-province-filter"
-          #provinceFilter
-          class="select select-sm select-bordered"
-          [value]="projectProvinceFilter()"
-          (change)="projectProvinceFilter.set(provinceFilter.value)"
-        >
-          <option [value]="allProjectAreas">ทุกจังหวัด</option>
-          @for (province of projectProvinces(); track province) {
-            <option [value]="province">{{ province }}</option>
-          }
-        </select>
-        @if (hasProjectFilters()) {
-          <button type="button" class="btn btn-sm btn-ghost" (click)="clearProjectFilters()">
-            ล้างตัวกรอง
+        </section>
+      } @else if (!selectedNode()) {
+        <section class="dashboard-nodes" aria-label="จุดติดตั้งในโครงการ">
+          <div class="dashboard-breadcrumb">
+            <button type="button" class="btn btn-sm btn-ghost" (click)="backToProjects()">
+              ‹ โครงการทั้งหมด
+            </button>
+            <span aria-hidden="true">/</span>
+            <span>{{ selectedProject()?.name }}</span>
+          </div>
+          <div class="selection-hero">
+            <div>
+              <span class="directory-kicker">จุดติดตั้ง</span>
+              <h3>{{ selectedProject()?.name }}</h3>
+              <p>เลือกจุดติดตั้งเพื่อดูสถานะอุปกรณ์</p>
+            </div>
+            <span class="selection-count"
+              >{{ nodesInSelectedProject().length | number }} จุดติดตั้ง</span
+            >
+          </div>
+          <div class="node-list">
+            @for (node of nodesInSelectedProject(); track node.key) {
+              <button type="button" class="node-row" (click)="selectNode(node)">
+                <span class="node-location-icon" aria-hidden="true">⌖</span>
+                <span class="node-row-main">
+                  <span class="node-row-name">{{ node.name }}</span>
+                  <span class="node-row-meta">{{ node.deviceCount | number }} อุปกรณ์</span>
+                </span>
+                <span class="node-health">
+                  <span class="status-online"><i></i>{{ node.onlineCount | number }} Online</span>
+                  <span class="status-offline"
+                    ><i></i>{{ node.offlineCount | number }} Offline</span
+                  >
+                </span>
+                <span class="node-open" aria-hidden="true">→</span>
+              </button>
+            }
+          </div>
+        </section>
+      } @else {
+        <div class="dashboard-breadcrumb dashboard-device-breadcrumb">
+          <button type="button" class="btn btn-sm btn-ghost" (click)="backToProjects()">
+            โครงการทั้งหมด
           </button>
-        }
-      </div>
-    }
-
-    @if (activeTab() === 'node') {
-      <div class="project-filter-row">
-        <label class="project-filter-label" for="node-type-filter">ชนิด Node</label>
-        <select
-          id="node-type-filter"
-          #nodeTypeSelect
-          class="select select-sm select-bordered"
-          [value]="nodeTypeFilter()"
-          (change)="nodeTypeFilter.set(nodeTypeSelect.value)"
-        >
-          <option [value]="allNodeTypes">ทุกชนิด</option>
-          @for (type of nodeTypes(); track type) {
-            <option [value]="type">{{ type }}</option>
-          }
-        </select>
-        <label class="project-filter-label" for="node-state-filter">กรองตามสถานะ</label>
-        <select
-          id="node-state-filter"
-          #nodeFilter
-          class="select select-sm select-bordered"
-          [value]="nodeStateFilter()"
-          (change)="nodeStateFilter.set(nodeFilter.value)"
-        >
-          <option [value]="allProjectStates">ทุกสถานะ</option>
-          @for (state of nodeStates(); track state) {
-            <option [value]="state">{{ state }}</option>
-          }
-        </select>
-        @if (nodeStateFilter() !== allProjectStates || nodeTypeFilter() !== allNodeTypes) {
-          <button
-            type="button"
-            class="btn btn-sm btn-ghost"
-            (click)="nodeStateFilter.set(allProjectStates); nodeTypeFilter.set(allNodeTypes)"
-          >
-            ล้างตัวกรอง
+          <span aria-hidden="true">/</span>
+          <button type="button" class="btn btn-sm btn-ghost" (click)="backToNodes()">
+            {{ selectedProject()?.name }}
           </button>
-        }
-      </div>
-    }
-    @if (activeTab() === 'device') {
-      <div class="project-filter-row">
-        <label class="project-filter-label" for="device-type-filter">ชนิดอุปกรณ์</label>
-        <select
-          id="device-type-filter"
-          #deviceFilter
-          class="select select-sm select-bordered"
-          [value]="deviceTypeFilter()"
-          (change)="deviceTypeFilter.set(deviceFilter.value)"
-        >
-          <option [value]="allDeviceTypes">ทุกชนิด</option>
-          @for (type of deviceTypes(); track type) {
-            <option [value]="type">{{ type }}</option>
-          }
-        </select>
-        <label class="project-filter-label" for="device-status-filter">สถานะ</label>
-        <select id="device-status-filter" #deviceStatusSelect class="select select-sm select-bordered"
-          [value]="deviceStatusFilter()" (change)="deviceStatusFilter.set(deviceStatusSelect.value)">
-          <option [value]="allDeviceStatuses">ทุกสถานะ</option>
-          @for (status of deviceStatuses(); track status) {
-            <option [value]="status">{{ status }}</option>
-          }
-        </select>
-        @if (hasDeviceFilters()) {
-          <button
-            type="button"
-            class="btn btn-sm btn-ghost"
-            (click)="clearDeviceFilters()"
-          >
-            ล้างตัวกรอง
-          </button>
-        }
-      </div>
-    }
-    @switch (activeTab()) {
-      @case ('node') {
-        <app-data-table
-          [data]="filteredNodes()"
-          [columns]="nodeColumns"
-          [isLoading]="nodesLoading()"
-          [errorMessage]="nodesError()"
-          [emptyMessage]="
-            nodeStateFilter() === allProjectStates && nodeTypeFilter() === allNodeTypes
-              ? 'ไม่มีข้อมูล Node'
-              : 'ไม่พบ Node ตามตัวกรองที่เลือก'
-          "
-        />
-      }
-      @case ('device') {
+          <span aria-hidden="true">/</span>
+          <span>{{ selectedNode()?.name }}</span>
+        </div>
+        <div class="device-context">
+          <span class="node-location-icon" aria-hidden="true">⌖</span>
+          <div>
+            <span>จุดติดตั้ง</span>
+            <strong>{{ selectedNode()?.name }}</strong>
+          </div>
+          <span class="device-context-count">{{ filteredDevices().length | number }} อุปกรณ์</span>
+        </div>
+        <div class="dashboard-filter-area">
+          <section class="device-filters" aria-label="ตัวกรองอุปกรณ์">
+            <div class="device-status-options" role="group" aria-label="กรองตามสถานะ">
+              @for (option of deviceStatusOptions(); track option.value) {
+                <button
+                  type="button"
+                  class="device-status-option"
+                  [class.device-status-selected]="deviceStatusFilter() === option.value"
+                  [attr.aria-pressed]="deviceStatusFilter() === option.value"
+                  (click)="deviceStatusFilter.set(option.value)"
+                >
+                  <span>{{ option.label }}</span>
+                  <span class="device-status-count">{{ option.count | number }}</span>
+                </button>
+              }
+            </div>
+            <div class="filter-controls">
+              <label class="filter-select" for="device-type-filter">
+                <span>ชนิดอุปกรณ์</span>
+                <select
+                  id="device-type-filter"
+                  #deviceFilter
+                  class="select select-sm"
+                  [value]="deviceTypeFilter()"
+                  (change)="deviceTypeFilter.set(deviceFilter.value)"
+                >
+                  <option [value]="allDeviceTypes">ทุกชนิด</option>
+                  @for (type of deviceTypes(); track type) {
+                    <option [value]="type">{{ type }}</option>
+                  }
+                </select>
+              </label>
+              @if (hasDeviceFilters()) {
+                <button type="button" class="btn btn-sm btn-ghost" (click)="clearDeviceFilters()">
+                  ล้างชนิดและสถานะ
+                </button>
+              }
+            </div>
+          </section>
+        </div>
         <app-data-table
           [data]="filteredDevices()"
           [isLoading]="devicesLoading()"
@@ -257,21 +451,10 @@
           [emptyMessage]="
             hasDeviceFilters()
               ? 'ไม่พบอุปกรณ์ตามตัวกรองที่เลือก'
-              : 'ไม่มีข้อมูล Device'
+              : 'ไม่มีข้อมูล Device ที่จุดติดตั้งนี้'
           "
         />
       }
-      @case ('project') {
-        <app-data-table
-          [data]="filteredProjects()"
-          [columns]="projectColumns"
-          [isLoading]="projectsLoading()"
-          [errorMessage]="projectsError()"
-          [emptyMessage]="
-            hasProjectFilters() ? 'ไม่พบ Project ตามตัวกรองที่เลือก' : 'ไม่มีข้อมูล Project'
-          "
-        />
-      }
-    }
+    </main>
   </div>
 </div>
