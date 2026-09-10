@@ -1,22 +1,28 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ErrorHandler, OnInit, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ErrorHandler, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, timeout } from 'rxjs';
 import { DeviceData, DevicesService } from '../../core/services/devices.service';
 import { columnGroupingFeature, createGroupedRowModel, createExpandedRowModel, rowExpandingFeature, tableFeatures, injectTable, ExpandedState } from '@tanstack/angular-table';
 
 const DEVICE_REQUEST_TIMEOUT_MS = 25_000;
 const ALL_VALUES = '';
-const GROUP_FIELDS = ['status', 'index', 'project_region', 'project_province', 'project_name'] as const;
+const STATUS_ONLINE = 'online';
+const STATUS_OFFLINE = 'offline';
+const SEARCH_FIELDS = ['name', 'node_name', 'project_name', 'index', 'status', 'decoder_name'] as const;
+const GROUP_FIELDS = ['status', 'index', 'project_name'] as const;
 type GroupField = typeof GROUP_FIELDS[number];
-type FilterName = 'project' | 'region' | 'province' | 'device' | 'status';
+const GROUP_OPTIONS: readonly { value: GroupField; label: string }[] = [
+  { value: 'status', label: 'สถานะ' },
+  { value: 'index', label: 'ชนิดอุปกรณ์' },
+  { value: 'project_name', label: 'โครงการ' },
+];
+type FilterName = 'project' | 'device' | 'status';
 const OPTION_DEPENDENCIES: Record<GroupField, readonly GroupField[]> = {
-  project_region: ['index', 'status'],
-  project_province: ['project_region', 'index', 'status'],
-  project_name: ['project_region', 'project_province', 'index', 'status'],
-  index: ['project_region', 'project_province', 'project_name', 'status'],
-  status: ['project_region', 'project_province', 'project_name', 'index'],
+  project_name: ['index', 'status'],
+  index: ['project_name', 'status'],
+  status: ['project_name', 'index'],
 };
 const features = tableFeatures({
   columnGroupingFeature, rowExpandingFeature,
@@ -24,11 +30,11 @@ const features = tableFeatures({
 });
 
 @Component({
-  selector: 'app-row-group-demo',
-  imports: [RouterLink, DecimalPipe],
+  selector: 'app-row-group',
+  imports: [DecimalPipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './row-group-demo.html',
-  styleUrl: './row-group-demo.css',
+  templateUrl: './row-group.html',
+  styleUrl: './row-group.css',
 })
 export class RowGroupDemo implements OnInit {
   private readonly devicesService = inject(DevicesService);
@@ -38,6 +44,7 @@ export class RowGroupDemo implements OnInit {
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
   readonly embedded = input(false);
+  readonly refreshRequested = output<void>();
   readonly inputDevices = input<DeviceData[] | null>(null);
   readonly inputLoading = input<boolean | null>(null);
   readonly inputError = input<string | null>(null);
@@ -45,20 +52,18 @@ export class RowGroupDemo implements OnInit {
   readonly sourceLoading = computed(() => this.inputLoading() ?? this.isLoading());
   readonly sourceError = computed(() => this.inputError() ?? this.errorMessage());
   readonly projectFilter = signal(ALL_VALUES);
-  readonly regionFilter = signal(ALL_VALUES);
-  readonly provinceFilter = signal(ALL_VALUES);
   readonly deviceTypeFilter = signal(ALL_VALUES);
   readonly statusFilter = signal(ALL_VALUES);
+  readonly searchTerm = signal(ALL_VALUES);
+  readonly activeGrouping = signal<readonly GroupField[]>([]);
   readonly expanded = signal<ExpandedState>({});
+  readonly groupOptions = GROUP_OPTIONS;
   readonly projectOptions = computed(() => this.filterOptions('project_name'));
-  readonly regionOptions = computed(() => this.filterOptions('project_region'));
-  readonly provinceOptions = computed(() => this.filterOptions('project_province'));
   readonly deviceOptions = computed(() => this.filterOptions('index'));
   readonly statusOptions = computed(() => this.filterOptions('status'));
   private readonly filteredDevices = computed(() => this.sourceDevices().filter(device =>
-    this.matchesFilter(device, 'project_name', this.projectFilter())
-    && this.matchesFilter(device, 'project_region', this.regionFilter())
-    && this.matchesFilter(device, 'project_province', this.provinceFilter())
+    this.matchesSearch(device, this.searchTerm())
+    && this.matchesFilter(device, 'project_name', this.projectFilter())
     && this.matchesFilter(device, 'index', this.deviceTypeFilter())
     && this.matchesFilter(device, 'status', this.statusFilter()),
   ));
@@ -67,8 +72,19 @@ export class RowGroupDemo implements OnInit {
     accessorFn: (device: DeviceData) => this.displayValue(device[field]),
   }));
   readonly filteredDeviceCount = computed(() => this.filteredDevices().length);
+  readonly statusSummary = computed(() => {
+    const devices = this.filteredDevices();
+    const online = devices.filter((device) => this.displayValue(device['status']).toLowerCase() === STATUS_ONLINE).length;
+    const offline = devices.filter((device) => this.displayValue(device['status']).toLowerCase() === STATUS_OFFLINE).length;
+    return {
+      total: devices.length,
+      online,
+      offline,
+      unknown: devices.length - online - offline,
+    };
+  });
   readonly hasActiveFilters = computed(() =>
-    [this.projectFilter(), this.regionFilter(), this.provinceFilter(), this.deviceTypeFilter(), this.statusFilter()]
+    [this.searchTerm(), this.projectFilter(), this.deviceTypeFilter(), this.statusFilter()]
       .some(Boolean),
   );
   readonly table = injectTable(() => ({
@@ -78,7 +94,7 @@ export class RowGroupDemo implements OnInit {
     // Changing the group resets expansion explicitly; refreshing preserves it.
     autoResetExpanded: false,
     state: {
-      grouping: [...GROUP_FIELDS],
+      grouping: [...this.activeGrouping()],
       expanded: this.expanded(),
     },
     onExpandedChange: updater => {
@@ -91,28 +107,44 @@ export class RowGroupDemo implements OnInit {
       : typeof value === 'number' ? String(value) : 'ไม่ระบุ';
   }
 
+  toggleGrouping(field: GroupField): void {
+    this.activeGrouping.update(selected =>
+      GROUP_FIELDS.filter(candidate => candidate === field
+        ? !selected.includes(candidate)
+        : selected.includes(candidate)),
+    );
+    this.expanded.set({});
+  }
+
+  clearGrouping(): void {
+    this.activeGrouping.set([]);
+    this.expanded.set({});
+  }
+
   setFilter(value: string, filter: FilterName): void {
     const filters = {
       project: this.projectFilter,
-      region: this.regionFilter,
-      province: this.provinceFilter,
       device: this.deviceTypeFilter,
       status: this.statusFilter,
     };
     filters[filter].set(value);
-    if (filter === 'region') {
-      this.provinceFilter.set(ALL_VALUES);
-      this.projectFilter.set(ALL_VALUES);
-    } else if (filter === 'province') {
-      this.projectFilter.set(ALL_VALUES);
-    }
     this.expanded.set(true);
   }
 
+  setSearchTerm(value: string): void {
+    this.searchTerm.set(value);
+    this.expanded.set(true);
+  }
+
+  refresh(): void {
+    if (this.sourceLoading()) return;
+    if (this.embedded()) this.refreshRequested.emit();
+    else this.loadDevices();
+  }
+
   clearFilters(): void {
+    this.searchTerm.set(ALL_VALUES);
     this.projectFilter.set(ALL_VALUES);
-    this.regionFilter.set(ALL_VALUES);
-    this.provinceFilter.set(ALL_VALUES);
     this.deviceTypeFilter.set(ALL_VALUES);
     this.statusFilter.set(ALL_VALUES);
     this.expanded.set({});
@@ -120,8 +152,6 @@ export class RowGroupDemo implements OnInit {
 
   private filterOptions(field: GroupField): string[] {
     const selected: Record<GroupField, string> = {
-      project_region: this.regionFilter(),
-      project_province: this.provinceFilter(),
       project_name: this.projectFilter(),
       index: this.deviceTypeFilter(),
       status: this.statusFilter(),
@@ -136,6 +166,13 @@ export class RowGroupDemo implements OnInit {
 
   private matchesFilter(device: DeviceData, field: typeof GROUP_FIELDS[number], selectedValue: string): boolean {
     return selectedValue === ALL_VALUES || this.displayValue(device[field]) === selectedValue;
+  }
+
+  private matchesSearch(device: DeviceData, searchTerm: string): boolean {
+    const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase();
+    return normalizedSearchTerm === ALL_VALUES || SEARCH_FIELDS.some(field =>
+      this.displayValue(device[field]).toLocaleLowerCase().includes(normalizedSearchTerm),
+    );
   }
 
   ngOnInit(): void {

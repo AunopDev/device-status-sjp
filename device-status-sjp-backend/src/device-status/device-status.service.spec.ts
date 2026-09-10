@@ -19,6 +19,8 @@ describe('DeviceStatusService mapping', () => {
         return [{ uuid: 'nvr-1', name: 'NVR-01', index: 'NVR', ref: 'node-1' }];
       if (sheetName === 'node')
         return [{ uuid: 'NODE-1', name: 'เสาแยกตลาด', projcet: 'ThaKhlong' }];
+      if (sheetName === 'decoder')
+        return [{ uuid: 'decoder-1', index: 'NVR', name: 'เครื่องบันทึกภาพ' }];
       return [{ uuid: 'project-1', name: 'thakhlong', region: 'กลาง', province: 'ปทุมธานี' }];
     });
     jest
@@ -42,6 +44,7 @@ describe('DeviceStatusService mapping', () => {
         project_uuid: 'project-1',
         project_region: 'กลาง',
         project_province: 'ปทุมธานี',
+        decoder_name: 'เครื่องบันทึกภาพ',
       },
     ]);
     service.onModuleDestroy();

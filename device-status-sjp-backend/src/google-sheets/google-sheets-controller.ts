@@ -26,4 +26,9 @@ export class GoogleSheetsController {
   findProjects(): Promise<unknown[]> {
     return this.googleSheetsService.findAll('project');
   }
+
+  @Get('decoders')
+  findDecoders(): Promise<unknown[]> {
+    return this.googleSheetsService.findAll('decoder');
+  }
 }

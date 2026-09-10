@@ -94,9 +94,20 @@
    fringing on dark backgrounds. Force grayscale antialiasing site-wide to
    keep text crisp and neutral in both themes. */
 html {
+  font-family: "Segoe UI", Tahoma, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+body { margin: 0; background: var(--color-base-200); color: var(--color-base-content); }
+button, input, select { font: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
 /* Chrome/Edge tint autofilled inputs with a bright blue background via

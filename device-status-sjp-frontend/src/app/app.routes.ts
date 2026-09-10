@@ -1,18 +1,12 @@
 import { Routes } from '@angular/router';
 import { Login } from './features/login/login';
 import { Dashboard } from './features/dashboard/dashboard';
-import { SidebarDemo } from './features/sidebar-demo/sidebar-demo';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
-    path: 'row-group-demo',
-    loadComponent: () => import('./features/row-group-demo/row-group-demo').then((module) => module.RowGroupDemo),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'group-demo',
-    loadComponent: () => import('./features/group-demo/group-demo').then((module) => module.GroupDemo),
+    path: 'row-group',
+    loadComponent: () => import('./features/row-group/row-group').then((module) => module.RowGroupDemo),
     canActivate: [authGuard],
   },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -20,11 +14,6 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: Dashboard,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'sidebar-demo',
-    component: SidebarDemo,
     canActivate: [authGuard],
   },
   // {

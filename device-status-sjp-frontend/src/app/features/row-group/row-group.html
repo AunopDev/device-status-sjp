@@ -1,0 +1,195 @@
+<main [class.embedded-page]="embedded()">
+  @if (!embedded()) {
+    <nav class="page-actions" aria-label="เมนูหน้าอุปกรณ์">
+      <a routerLink="/dashboard" class="btn btn-sm btn-ghost">← แดชบอร์ด</a>
+    </nav>
+  }
+  <section class="group-panel">
+      <div class="status-summary">
+        <div class="summary-card summary-total">
+          <span>ทั้งหมด</span>
+          <strong>{{ statusSummary().total | number }}</strong>
+        </div>
+        <div class="summary-card summary-online">
+          <span><i></i>Online</span>
+          <strong>{{ statusSummary().online | number }}</strong>
+        </div>
+        <div class="summary-card summary-offline">
+          <span><i></i>Offline</span>
+          <strong>{{ statusSummary().offline | number }}</strong>
+        </div>
+        <div class="summary-card summary-unknown">
+          <span><i></i>ไม่ระบุ</span>
+          <strong>{{ statusSummary().unknown | number }}</strong>
+        </div>
+      </div>
+    <div class="search-toolbar">
+      <label class="search-field">ค้นหา
+        <input
+          type="search"
+          class="input input-sm"
+          placeholder="ชื่ออุปกรณ์ จุดติดตั้ง หรือโครงการ"
+          [value]="searchTerm()"
+          (input)="setSearchTerm(search.value)"
+          #search
+        />
+      </label>
+      <button type="button" class="refresh-button btn btn-sm" [disabled]="sourceLoading()" (click)="refresh()">
+        @if (sourceLoading()) {
+          <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
+        } @else {
+          <span aria-hidden="true">↻</span>
+        }
+        {{ sourceLoading() ? 'กำลังโหลด…' : 'รีเฟรชข้อมูล' }}
+      </button>
+    </div>
+    <div class="group-controls">
+      <fieldset class="grouping-options">
+        <legend>จัดกลุ่ม</legend>
+        <div>
+          @for (option of groupOptions; track option.value) {
+            <button
+              type="button"
+              class="btn btn-sm"
+              [class.btn-primary]="activeGrouping().includes(option.value)"
+              [attr.aria-pressed]="activeGrouping().includes(option.value)"
+              (click)="toggleGrouping(option.value)"
+            >
+              @if (activeGrouping().includes(option.value)) {
+                <span aria-hidden="true">✓</span>
+              }
+              {{ option.label }}
+            </button>
+          }
+        </div>
+      </fieldset>
+      <label
+        >สถานะ<select
+          id="group-status-filter"
+          #status
+          class="select select-sm"
+          [value]="statusFilter()"
+          (change)="setFilter(status.value, 'status')"
+        >
+          <option value="">ทั้งหมด</option>
+          @for (option of statusOptions(); track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select></label
+      >
+      <label
+        >อุปกรณ์<select
+          id="group-device-filter"
+          #device
+          class="select select-sm"
+          [value]="deviceTypeFilter()"
+          (change)="setFilter(device.value, 'device')"
+        >
+          <option value="">ทั้งหมด</option>
+          @for (option of deviceOptions(); track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select></label
+      >
+      <label
+        >โครงการ<select
+          id="group-project-filter"
+          #project
+          class="select select-sm"
+          [value]="projectFilter()"
+          (change)="setFilter(project.value, 'project')"
+        >
+          <option value="">ทั้งหมด</option>
+          @for (option of projectOptions(); track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select></label
+      >
+    </div>
+    <div class="list-toolbar">
+      <p class="list-count" role="status">
+        <strong>{{ filteredDeviceCount() | number }}</strong
+        ><span>รายการ</span>
+      </p>
+      <div class="list-actions">
+        @if (hasActiveFilters()) {
+          <button type="button" class="btn btn-sm btn-ghost" (click)="clearFilters()">
+            ล้างตัวกรอง
+          </button>
+        }
+        @if (activeGrouping().length) {
+          <button type="button" class="btn btn-sm btn-ghost" (click)="clearGrouping()">
+            ไม่จัดกลุ่ม
+          </button>
+          <button type="button" class="btn btn-sm btn-ghost" (click)="expanded.set(true)">
+            ขยายทั้งหมด
+          </button>
+          <button type="button" class="btn btn-sm btn-ghost" (click)="expanded.set({})">
+            ยุบทั้งหมด
+          </button>
+        }
+      </div>
+    </div>
+    @if (sourceLoading()) {
+      <p class="panel-message" role="status">กำลังโหลดข้อมูลอุปกรณ์…</p>
+    } @else if (sourceError()) {
+      <p role="alert" class="alert alert-error">{{ sourceError() }}</p>
+    } @else if (filteredDeviceCount() === 0) {
+      <p class="panel-message" role="status">ไม่พบอุปกรณ์ที่ตรงกับตัวกรอง</p>
+    } @else {
+      <div class="group-list" tabindex="0" role="region" aria-label="ตารางอุปกรณ์">
+        <table class="device-table">
+          <caption class="sr-only">
+            รายการอุปกรณ์ทั้งหมดหรือจัดกลุ่มตามมุมมองที่เลือก
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">อุปกรณ์</th>
+              <th scope="col">โครงการ</th>
+              <th scope="col">จุดติดตั้ง</th>
+              <th scope="col">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of table.getRowModel().rows; track row.id) {
+              @if (row.getIsGrouped()) {
+                <tr
+                  class="group-row"
+                  [class.root-group]="row.depth === 0"
+                  [class.nested-group]="row.depth > 0"
+                >
+                  <td colspan="4">
+                    <button
+                      type="button"
+                      class="group-toggle"
+                      [style.padding-left.px]="16 + row.depth * 24"
+                      [attr.aria-expanded]="row.getIsExpanded()"
+                      (click)="row.toggleExpanded()"
+                    >
+                      <span class="chevron" aria-hidden="true">{{
+                        row.getIsExpanded() ? '▾' : '▸'
+                      }}</span
+                      ><strong>{{ row.groupingValue }}</strong
+                      ><span class="badge badge-sm"
+                        >{{ row.getLeafRows().length | number }} อุปกรณ์</span
+                      >
+                    </button>
+                  </td>
+                </tr>
+              } @else {
+                <tr class="device-row">
+                  <td [style.padding-left.px]="16 + row.depth * 24">
+                    {{ displayValue(row.original['name']) }}
+                  </td>
+                  <td>{{ displayValue(row.original['project_name']) }}</td>
+                  <td>{{ displayValue(row.original['node_name']) }}</td>
+                  <td>{{ displayValue(row.original['status']) }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>

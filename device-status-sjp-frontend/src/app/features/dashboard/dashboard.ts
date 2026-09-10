@@ -6,8 +6,7 @@ import { Router } from '@angular/router';
 import { DeviceData, DevicesService } from '../../core/services/devices.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
-import { DataTable } from '../../shared/components/data-table/data-table';
-import { RowGroupDemo } from '../row-group-demo/row-group-demo';
+import { RowGroupDemo } from '../row-group/row-group';
 
 const DEVICE_TYPE_ALL = '';
 const DEVICE_STATUS_ALL = '';
@@ -92,7 +91,7 @@ function uniqueDeviceValues(devices: readonly DeviceData[], field: string, fallb
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DataTable, RowGroupDemo, CommonModule],
+  imports: [RowGroupDemo, CommonModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -124,8 +123,6 @@ export class Dashboard implements OnInit {
   readonly allDeviceStatuses = DEVICE_STATUS_ALL;
   readonly deviceStatusFilter = signal(DEVICE_STATUS_ALL);
   readonly projectFilter = signal(FILTER_ALL);
-  readonly regionFilter = signal(FILTER_ALL);
-  readonly provinceFilter = signal(FILTER_ALL);
   readonly nodeFilter = signal(FILTER_ALL);
   readonly deviceGroupBy = signal(FILTER_ALL);
   readonly selectedProjectKey = signal<string | null>(null);
@@ -229,16 +226,13 @@ export class Dashboard implements OnInit {
     () =>
       this.deviceTypeFilter() !== DEVICE_TYPE_ALL ||
       this.deviceStatusFilter() !== DEVICE_STATUS_ALL ||
-      this.projectFilter() !== FILTER_ALL || this.regionFilter() !== FILTER_ALL ||
-      this.provinceFilter() !== FILTER_ALL || this.nodeFilter() !== FILTER_ALL,
+      this.projectFilter() !== FILTER_ALL || this.nodeFilter() !== FILTER_ALL,
   );
 
   clearDeviceFilters(): void {
     this.deviceTypeFilter.set(DEVICE_TYPE_ALL);
     this.deviceStatusFilter.set(DEVICE_STATUS_ALL);
     this.projectFilter.set(FILTER_ALL);
-    this.regionFilter.set(FILTER_ALL);
-    this.provinceFilter.set(FILTER_ALL);
     this.nodeFilter.set(FILTER_ALL);
   }
   readonly deviceTypes = computed(() =>
@@ -265,14 +259,10 @@ export class Dashboard implements OnInit {
         (this.deviceStatusFilter() === DEVICE_STATUS_ALL ||
           deviceStatus(device) === this.deviceStatusFilter()) &&
         (this.projectFilter() === FILTER_ALL || recordText(device, 'project_name', PROJECT_UNKNOWN) === this.projectFilter()) &&
-        (this.regionFilter() === FILTER_ALL || recordText(device, 'project_region', 'ไม่ระบุภูมิภาค') === this.regionFilter()) &&
-        (this.provinceFilter() === FILTER_ALL || recordText(device, 'project_province', 'ไม่ระบุจังหวัด') === this.provinceFilter()) &&
         (this.nodeFilter() === FILTER_ALL || nodeName(device) === this.nodeFilter()),
     ),
   );
   readonly projectOptions = computed(() => uniqueDeviceValues(this.devices(), 'project_name', PROJECT_UNKNOWN));
-  readonly regionOptions = computed(() => uniqueDeviceValues(this.devices(), 'project_region', 'ไม่ระบุภูมิภาค'));
-  readonly provinceOptions = computed(() => uniqueDeviceValues(this.devices(), 'project_province', 'ไม่ระบุจังหวัด'));
   readonly nodeOptions = computed(() => uniqueDeviceValues(this.devices(), 'node_name', NODE_UNKNOWN));
 
   setActiveView(view: DashboardView): void {

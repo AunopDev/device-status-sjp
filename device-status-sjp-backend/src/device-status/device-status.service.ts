@@ -27,10 +27,14 @@ const DEVICE_PROJECT_NAME_FIELD = 'project_name';
 const DEVICE_PROJECT_UUID_FIELD = 'project_uuid';
 const DEVICE_PROJECT_REGION_FIELD = 'project_region';
 const DEVICE_PROJECT_PROVINCE_FIELD = 'project_province';
+const DEVICE_DECODER_NAME_FIELD = 'decoder_name';
+const DECODER_REFERENCE_FIELDS = ['uuid', 'ref', 'index', 'code'] as const;
+const DEVICE_DECODER_KEY_FIELDS = ['decoder_ref', 'decoder_uuid', 'decoder', 'index'] as const;
 
 type DeviceRecord = Record<string, unknown> & { uuid: string };
 type NodeRecord = Record<string, unknown> & { uuid: string };
 type ProjectRecord = Record<string, unknown> & { uuid: string };
+type DecoderRecord = Record<string, unknown> & { uuid: string };
 type DeviceStatusResponse = { online: string[]; offline: string[] };
 
 @Injectable()
@@ -76,10 +80,18 @@ export class DeviceStatusService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getDevices(): Promise<DeviceRecord[]> {
-    const [devices, nodes, projects] = await Promise.all([
+    const decodersPromise = this.googleSheetsService.findAll('decoder').catch((error: unknown) => {
+      this.logger.warn(
+        'Decoder data is unavailable; returning devices without decoder details',
+        error instanceof Error ? error.message : 'Unknown error',
+      );
+      return [];
+    });
+    const [devices, nodes, projects, decoders] = await Promise.all([
       this.googleSheetsService.findAll('device'),
       this.googleSheetsService.findAll('node'),
       this.googleSheetsService.findAll('project'),
+      decodersPromise,
     ]);
     const deviceRecords = devices.filter(isDeviceRecord);
     const nodeByUuid = createRecordMap(
@@ -89,6 +101,11 @@ export class DeviceStatusService implements OnModuleInit, OnModuleDestroy {
     const projectByReference = createProjectMap(
       projects.filter(isProjectRecord),
     );
+    const decoderRecords = decoders.reduce<DecoderRecord[]>((records, value) => {
+      if (isDecoderRecord(value)) records.push(value);
+      return records;
+    }, []);
+    const decoderByReference = createDecoderMap(decoderRecords);
     await this.refreshInFlight;
     const statusResponse = this.statusSnapshot;
     if (!statusResponse)
@@ -111,6 +128,7 @@ export class DeviceStatusService implements OnModuleInit, OnModuleDestroy {
       const project = projectByReference.get(
         normalizeReference(projectReference),
       );
+      const decoderName = findDecoderName(device, decoderByReference);
 
       return {
         ...device,
@@ -127,6 +145,7 @@ export class DeviceStatusService implements OnModuleInit, OnModuleDestroy {
           getRecordString(project, PROJECT_REGION_FIELD) ?? DEVICE_STATUS_UNKNOWN,
         [DEVICE_PROJECT_PROVINCE_FIELD]:
           getRecordString(project, PROJECT_PROVINCE_FIELD) ?? DEVICE_STATUS_UNKNOWN,
+        ...(decoderName ? { [DEVICE_DECODER_NAME_FIELD]: decoderName } : {}),
       };
     });
   }
@@ -179,6 +198,10 @@ function isProjectRecord(value: unknown): value is ProjectRecord {
   return isRecordWithUuid(value);
 }
 
+function isDecoderRecord(value: unknown): value is DecoderRecord {
+  return isRecordWithUuid(value);
+}
+
 function isRecordWithUuid(
   value: unknown,
 ): value is Record<string, unknown> & { uuid: string } {
@@ -208,6 +231,32 @@ function createProjectMap(
       projectByReference.set(normalizeReference(projectName), project);
   }
   return projectByReference;
+}
+
+function createDecoderMap(
+  decoders: readonly DecoderRecord[],
+): Map<string, DecoderRecord> {
+  const decoderByReference = new Map<string, DecoderRecord>();
+  for (const decoder of decoders) {
+    for (const field of DECODER_REFERENCE_FIELDS) {
+      const reference = getRecordString(decoder, field);
+      if (reference) decoderByReference.set(normalizeReference(reference), decoder);
+    }
+  }
+  return decoderByReference;
+}
+
+function findDecoderName(
+  device: DeviceRecord,
+  decoderByReference: ReadonlyMap<string, DecoderRecord>,
+): string | undefined {
+  for (const field of DEVICE_DECODER_KEY_FIELDS) {
+    const reference = getRecordString(device, field);
+    const decoder = decoderByReference.get(normalizeReference(reference));
+    const decoderName = getFirstRecordString(decoder, ['name', 'label', 'title']);
+    if (decoderName) return decoderName;
+  }
+  return undefined;
 }
 
 function getRecordString(
