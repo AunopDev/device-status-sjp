@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, interval, timeout } from 'rxjs';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { DeviceData, DevicesService } from '../../core/services/devices.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { DataTable } from '../../shared/components/data-table/data-table';
+import { RowGroupDemo } from '../row-group-demo/row-group-demo';
 
 const DEVICE_TYPE_ALL = '';
 const DEVICE_STATUS_ALL = '';
@@ -91,7 +92,7 @@ function uniqueDeviceValues(devices: readonly DeviceData[], field: string, fallb
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DataTable, CommonModule, RouterLink],
+  imports: [DataTable, RowGroupDemo, CommonModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -112,6 +113,12 @@ export class Dashboard implements OnInit {
   devices = signal<DeviceData[]>([]);
   devicesLoading = signal(true);
   devicesError = signal('');
+  readonly onlineDeviceCount = computed(
+    () => this.devices().filter((device) => deviceStatus(device) === DEVICE_STATUS_ONLINE).length,
+  );
+  readonly offlineDeviceCount = computed(
+    () => this.devices().filter((device) => deviceStatus(device) === DEVICE_STATUS_OFFLINE).length,
+  );
   readonly allDeviceTypes = DEVICE_TYPE_ALL;
   readonly deviceTypeFilter = signal(DEVICE_TYPE_ALL);
   readonly allDeviceStatuses = DEVICE_STATUS_ALL;
@@ -123,7 +130,9 @@ export class Dashboard implements OnInit {
   readonly deviceGroupBy = signal(FILTER_ALL);
   readonly selectedProjectKey = signal<string | null>(null);
   readonly selectedNodeKey = signal<string | null>(null);
-  readonly activeView = signal<DashboardView>('projects');
+  // The production dashboard starts with the device grouping view. The older
+  // project and installation directory views remain below as a case study.
+  readonly activeView = signal<DashboardView>('devices');
   readonly projects = computed<ProjectSummary[]>(() => {
     const summaries = new Map<string, ProjectSummary>();
     for (const device of this.devices()) {
@@ -308,10 +317,6 @@ export class Dashboard implements OnInit {
 
   toggleTheme(): void {
     this.themeService.toggle();
-  }
-
-  openSidebarDemo(): void {
-    void this.router.navigateByUrl('/sidebar-demo');
   }
 
   logout(): void {

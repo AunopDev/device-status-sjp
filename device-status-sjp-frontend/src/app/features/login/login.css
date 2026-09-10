@@ -1,51 +1,48 @@
 @reference "../../../styles.css";
 
 .login-page {
-  @apply relative min-h-screen flex items-center justify-center bg-base-200 px-3 py-20 sm:px-5;
+  @apply relative flex min-h-screen items-center justify-center overflow-hidden bg-base-200 px-4 py-16 sm:px-6;
+}
+
+.login-notification-stack {
+  @apply fixed left-4 right-4 top-4 z-20 flex flex-col items-center gap-2 sm:left-auto sm:right-6 sm:top-6 sm:w-full sm:max-w-sm;
+}
+
+.login-notification {
+  @apply flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-sm leading-relaxed shadow-lg;
+  animation: login-notification-in 180ms ease-out;
+}
+
+.login-notification-mark {
+  @apply flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-current text-xs font-bold;
+}
+
+.login-shell {
+  @apply w-full max-w-md overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xl;
 }
 
 .login-container {
-  @apply w-full max-w-md min-w-0;
+  @apply flex w-full min-w-0 flex-col justify-center px-5 py-8 sm:px-8;
 }
 
 .login-header {
-  @apply flex items-center gap-3 px-1 py-2 mb-4;
+  @apply mb-7 flex items-center justify-center;
 }
 
-.login-icon {
-  @apply flex shrink-0 items-center justify-center h-11 w-11 rounded-xl bg-primary/10 text-primary;
-}
-
-.login-icon-svg {
-  @apply h-6 w-6;
-}
-
-.login-title {
-  @apply text-lg font-bold tracking-tight text-base-content leading-tight;
-}
-
-.login-subtitle {
-  @apply text-sm leading-relaxed text-base-content/70;
+.login-context {
+  @apply text-lg font-bold tracking-tight text-base-content;
 }
 
 .login-form {
-  @apply bg-base-100 rounded-xl border border-base-300 p-5 sm:p-6 flex flex-col gap-5;
-}
-
-.login-form-heading {
-  @apply flex flex-col gap-1 border-b border-base-300 pb-4;
-}
-
-.login-heading {
-  @apply text-xl font-semibold tracking-tight text-base-content;
+  @apply flex flex-col gap-5;
 }
 
 .login-session-message {
-  @apply border-l-2 border-primary pl-3 text-sm leading-relaxed text-base-content/70;
+  @apply border-primary/25 bg-base-100 text-base-content/80;
 }
 
 .login-error {
-  @apply rounded-lg py-2.5 text-sm;
+  @apply py-3;
 }
 
 .login-error-icon {
@@ -57,15 +54,19 @@
 }
 
 .login-label {
-  @apply text-sm font-medium text-base-content/70;
+  @apply text-sm font-medium text-base-content/80;
 }
 
 .login-input-wrap {
-  @apply flex w-full min-w-0 items-center gap-2 rounded-lg focus-within:outline-2 focus-within:outline-primary;
+  @apply flex w-full min-w-0 items-center gap-2 rounded-lg border-base-300 bg-base-100 transition-colors focus-within:border-primary focus-within:outline-2 focus-within:outline-primary/25;
 }
 
 .login-input-wrap input {
   @apply min-w-0;
+}
+
+.login-input-wrap input::placeholder {
+  @apply text-base-content/35;
 }
 
 .login-input-icon {
@@ -73,22 +74,48 @@
 }
 
 .login-toggle-visibility {
-  @apply flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-base-content/70 hover:bg-base-200;
+  @apply flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-base-content/60 transition-colors hover:bg-base-200 hover:text-base-content;
 }
 
-.login-toggle-visibility:focus-visible {
+.login-toggle-visibility:focus-visible,
+.login-theme-toggle:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 .login-submit {
-  @apply rounded-lg mt-1 h-12 text-sm font-semibold;
+  @apply mt-1 h-12 rounded-lg text-sm font-semibold shadow-sm transition-transform hover:-translate-y-px;
+}
+
+.login-submit:active {
+  @apply translate-y-0;
 }
 
 .login-theme-toggle {
-  @apply absolute top-4 right-4 sm:top-6 sm:right-6;
+  @apply absolute right-4 top-4 z-10 sm:right-6 sm:top-6;
 }
 
 .login-theme-icon {
   @apply h-4 w-4;
+}
+
+@keyframes login-notification-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 420px) {
+  .login-page {
+    @apply px-3 py-14;
+  }
+
+  .login-container {
+    @apply px-5 py-7;
+  }
 }

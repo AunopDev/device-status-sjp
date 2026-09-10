@@ -114,10 +114,18 @@
 .dt-row {
   @apply border-b border-base-300/70 last:border-b-0 hover:bg-primary/[0.05] transition-colors;
 }
-.dt-group-row { @apply bg-primary/[0.06] hover:bg-primary/[0.09]; }
-.dt-group-toggle { @apply inline-flex items-center gap-2 text-left text-primary; }
-.dt-group-toggle small { @apply rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary/75; }
-.dt-group-empty { @apply text-base-content/30; }
+.dt-group-row {
+  @apply bg-primary/[0.06] hover:bg-primary/[0.09];
+}
+.dt-group-toggle {
+  @apply inline-flex items-center gap-2 text-left text-primary;
+}
+.dt-group-toggle small {
+  @apply rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary/75;
+}
+.dt-group-empty {
+  @apply text-base-content/30;
+}
 
 .dt-td {
   @apply py-3.5 text-sm;

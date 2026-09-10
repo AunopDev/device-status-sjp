@@ -1,0 +1,134 @@
+<main [class.embedded-page]="embedded()">
+  @if (!embedded()) {
+    <header class="page-header">
+      <div>
+        <a routerLink="/dashboard" class="back-link">← กลับ Dashboard</a>
+        <h1>จัดกลุ่มอุปกรณ์</h1>
+        <p class="page-description">กรองข้อมูล แล้วเลือกเปิดเฉพาะกลุ่มที่ต้องการดู</p>
+      </div>
+      <div class="total-card" aria-label="จำนวนอุปกรณ์ทั้งหมด">
+        <strong>{{ sourceDevices().length | number }}</strong
+        ><span>อุปกรณ์ทั้งหมด</span>
+      </div>
+    </header>
+  }
+  <section class="group-panel" aria-label="รายการอุปกรณ์แบบจัดกลุ่ม">
+    <div class="panel-header">
+      <div>
+        <h2>รายการอุปกรณ์</h2>
+        <p class="group-path">สถานะ › อุปกรณ์ › ภาค › จังหวัด › โครงการ</p>
+      </div>
+      <div class="dashboard-refresh">
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          aria-label="โหลดข้อมูล Device ใหม่"
+          [disabled]="sourceLoading()"
+          (click)="loadDevices()"
+        >
+          {{ sourceLoading() ? 'กำลังโหลด…' : 'โหลดข้อมูลใหม่' }}
+        </button>
+      </div>
+      @if (!embedded()) {
+        <button
+          class="btn btn-sm btn-outline reload-button"
+          type="button"
+          [disabled]="sourceLoading()"
+          (click)="loadDevices()"
+        >
+          {{ sourceLoading() ? 'กำลังโหลด…' : 'โหลดข้อมูลใหม่' }}
+        </button>
+      }
+    </div>
+    <div class="group-controls">
+      <label>สถานะ<select id="group-status-filter" #status class="select select-sm" [value]="statusFilter()" (change)="setFilter(status.value, 'status')">
+        <option value="">ทั้งหมด</option>
+        @for (option of statusOptions(); track option) { <option [value]="option">{{ option }}</option> }
+      </select></label>
+      <label>อุปกรณ์<select id="group-device-filter" #device class="select select-sm" [value]="deviceTypeFilter()" (change)="setFilter(device.value, 'device')">
+        <option value="">ทั้งหมด</option>
+        @for (option of deviceOptions(); track option) { <option [value]="option">{{ option }}</option> }
+      </select></label>
+      <label>ภาค<select id="group-region-filter" #region class="select select-sm" [value]="regionFilter()" (change)="setFilter(region.value, 'region')">
+        <option value="">ทั้งหมด</option>
+        @for (option of regionOptions(); track option) { <option [value]="option">{{ option }}</option> }
+      </select></label>
+      <label>จังหวัด<select id="group-province-filter" #province class="select select-sm" [value]="provinceFilter()" (change)="setFilter(province.value, 'province')">
+        <option value="">ทั้งหมด</option>
+        @for (option of provinceOptions(); track option) { <option [value]="option">{{ option }}</option> }
+      </select></label>
+      <label>โครงการ<select id="group-project-filter" #project class="select select-sm" [value]="projectFilter()" (change)="setFilter(project.value, 'project')">
+        <option value="">ทั้งหมด</option>
+        @for (option of projectOptions(); track option) { <option [value]="option">{{ option }}</option> }
+      </select></label>
+    </div>
+    <div class="list-toolbar">
+      <p role="status">
+        <strong>{{ filteredDeviceCount() | number }}</strong> รายการที่แสดง
+      </p>
+      <div class="list-actions">
+        @if (hasActiveFilters()) {
+          <button type="button" class="btn btn-sm btn-ghost" (click)="clearFilters()">
+            ล้างตัวกรอง
+          </button>
+        }
+        <button type="button" class="btn btn-sm btn-ghost" (click)="expanded.set(true)">
+          ขยายทั้งหมด
+        </button>
+        <button type="button" class="btn btn-sm btn-ghost" (click)="expanded.set({})">
+          ยุบทั้งหมด
+        </button>
+      </div>
+    </div>
+    @if (sourceLoading()) {
+      <p class="panel-message" role="status">กำลังโหลดข้อมูลอุปกรณ์…</p>
+    } @else if (sourceError()) {
+      <p role="alert" class="alert alert-error">{{ sourceError() }}</p>
+    } @else if (filteredDeviceCount() === 0) {
+      <p class="panel-message" role="status">ไม่พบอุปกรณ์ที่ตรงกับตัวกรอง</p>
+    } @else {
+      <div class="group-list">
+        @for (row of table.getRowModel().rows; track row.id) {
+          @if (row.getIsGrouped()) {
+            <div
+              class="group-row"
+              [class.root-group]="row.depth === 0"
+              [class.nested-group]="row.depth > 0"
+            >
+              <button
+                type="button"
+                class="group-toggle"
+                [style.padding-left.px]="16 + row.depth * 24"
+                [attr.aria-expanded]="row.getIsExpanded()"
+                (click)="row.toggleExpanded()"
+              >
+                <span class="chevron" aria-hidden="true">{{ row.getIsExpanded() ? '▾' : '▸' }}</span
+                ><strong>{{ row.groupingValue }}</strong
+                ><span class="badge badge-sm">{{ row.getLeafRows().length }} อุปกรณ์</span>
+              </button>
+            </div>
+          } @else {
+            <dl class="device-row" [style.margin-left.px]="16 + row.depth * 24">
+              <div>
+                <dt>อุปกรณ์</dt>
+                <dd>{{ displayValue(row.original['name']) }}</dd>
+              </div>
+              <div>
+                <dt>โครงการ</dt>
+                <dd>{{ displayValue(row.original['project_name']) }}</dd>
+              </div>
+              <div>
+                <dt>จุดติดตั้ง</dt>
+                <dd>{{ displayValue(row.original['node_name']) }}</dd>
+              </div>
+              <div>
+                <dt>สถานะ</dt>
+                <dd>{{ displayValue(row.original['status']) }}</dd>
+              </div>
+            </dl>
+          }
+        }
+      </div>
+    }
+  </section>
+</main>

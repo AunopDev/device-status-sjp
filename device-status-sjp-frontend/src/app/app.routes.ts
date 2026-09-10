@@ -6,6 +6,11 @@ import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'row-group-demo',
+    loadComponent: () => import('./features/row-group-demo/row-group-demo').then((module) => module.RowGroupDemo),
+    canActivate: [authGuard],
+  },
+  {
     path: 'group-demo',
     loadComponent: () => import('./features/group-demo/group-demo').then((module) => module.GroupDemo),
     canActivate: [authGuard],
